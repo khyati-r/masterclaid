@@ -299,8 +299,8 @@ function obShell(title, stepLabel, bodyHtml, showBack, canContinue) {
   const continueBtn = canContinue === null
     ? ''
     : canContinue
-      ? '<button class="btn-primary" onclick="obNext()">Continue →</button>'
-      : '<button class="btn-primary" disabled>Continue →</button>';
+      ? '<button id="obContinueBtn" class="btn-primary" onclick="obNext()">Continue →</button>'
+      : '<button id="obContinueBtn" class="btn-primary" disabled>Continue →</button>';
 
   return `<div class="ob-shell">
   <div class="ob-inner">
@@ -327,7 +327,7 @@ function obBack() {
 }
 
 function updateObContinueBtn(enabled) {
-  var btn = document.querySelector('.ob-actions .btn-primary');
+  var btn = document.getElementById('obContinueBtn');
   if (btn) btn.disabled = !enabled;
 }
 
