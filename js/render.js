@@ -227,7 +227,7 @@ function renderBrainMap() {
   const names  = getAllDomainNames(STATE.profile);
   const scores = names.map((n, i) => ({ name: n, score: STATE.skillScores[i] || 0 }));
   const n = scores.length; // 10
-  const cx = 200, cy = 200, r = 150;
+  const cx = 240, cy = 240, r = 165;
   const angle = i => (i / n) * Math.PI * 2 - Math.PI / 2;
   const pt = (i, radius) => {
     const a = angle(i);
@@ -252,15 +252,15 @@ function renderBrainMap() {
   // Labels
   let labelsSvg = '';
   scores.forEach((s, i) => {
-    const [x, y] = pt(i, r + 24);
+    const [x, y] = pt(i, r + 30);
     const anchor = x < cx - 10 ? 'end' : x > cx + 10 ? 'start' : 'middle';
-    labelsSvg += `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="var(--mono)" font-size="8.5" fill="var(--text2)" letter-spacing="0.04em">${escapeHTML(s.name.substring(0, 18))}</text>`;
+    labelsSvg += `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="var(--mono)" font-size="10" fill="var(--text2)" letter-spacing="0.03em">${escapeHTML(s.name.substring(0, 20))}</text>`;
   });
 
   return `<div class="brain-map-wrap">
   <div class="panel-heading">Brain Map</div>
   <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Your skill coverage across all 10 domains. Updates as you complete challenges.</p>
-  <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;display:block;margin:0 auto;">
+  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto;">
     ${gridSvg}
     <polygon points="${skillPts}" fill="rgba(232,213,176,0.12)" stroke="var(--accent)" stroke-width="2"/>
     ${scores.map((s, i) => {
@@ -311,13 +311,16 @@ function renderGenerating() {
   const circumference = 2 * Math.PI * 36;
   return `<div class="generating-screen">
   <div class="gen-inner">
-    <svg viewBox="0 0 80 80" class="gen-ring-svg">
-      <circle cx="40" cy="40" r="36" fill="none" stroke="var(--bg3)" stroke-width="6"/>
-      <circle id="genRing" cx="40" cy="40" r="36" fill="none" stroke="var(--accent)" stroke-width="6"
-        stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
-        stroke-linecap="round"
-        style="transition:stroke-dashoffset 0.5s ease;"/>
-    </svg>
+    <div class="gen-ring-wrap">
+      <svg viewBox="0 0 80 80" class="gen-ring-svg">
+        <circle cx="40" cy="40" r="36" fill="none" stroke="var(--bg3)" stroke-width="6"/>
+        <circle id="genRing" cx="40" cy="40" r="36" fill="none" stroke="var(--accent)" stroke-width="6"
+          stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+          stroke-linecap="round"
+          style="transition:stroke-dashoffset 0.5s ease;"/>
+      </svg>
+      <div id="genPct" class="gen-pct-text">0%</div>
+    </div>
     <div id="genStatus" class="gen-status">Preparing…</div>
     <div class="gen-sub">Generating your first 3 days of challenges.<br>Optimised for speed — typically 45–70 seconds.</div>
     <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:8px;">

@@ -2007,8 +2007,11 @@ body {
 .fetch-indicator { font-family:var(--mono); font-size:10px; color:var(--text3); text-align:center; padding:10px 0; letter-spacing:0.06em; animation:fetchPulse 1.8s ease-in-out infinite; }
 @keyframes fetchPulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
+/* ── Sidebar section label (used in render.js) ───────────── */
+.sidebar-section-label { font-family:var(--mono); font-size:9px; letter-spacing:0.18em; color:var(--text3); text-transform:uppercase; margin-bottom:12px; }
+
 /* ── Domain score list (brain map) ───────────────────────── */
-.brain-map-wrap { max-width:700px; }
+.brain-map-wrap { max-width:100%; }
 .domain-score-list { display:flex; flex-direction:column; gap:8px; margin-top:24px; }
 .domain-score-row { display:flex; align-items:center; gap:10px; }
 .domain-score-name { font-family:var(--mono); font-size:10px; color:var(--text2); width:170px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -2191,8 +2194,10 @@ body {
 .generating-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:60px 24px; text-align:center; background:var(--bg); }
 .gen-inner { display:flex; flex-direction:column; align-items:center; max-width:480px; width:100%; }
 
-/* ── Generating ring SVG sizing (CSS rotation already in gen-ring-svg rule) */
+/* ── Generating ring: wrapper positions % text over the SVG ──────────────── */
+.gen-ring-wrap { position:relative; width:120px; height:120px; margin:0 auto 24px; flex-shrink:0; }
 .gen-ring-svg { width:120px; height:120px; display:block; transform:rotate(-90deg); }
+.gen-pct-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:17px; font-weight:500; color:var(--accent); pointer-events:none; letter-spacing:0.04em; }
 
 /* ── Modal box (render.js uses .modal-box; old CSS has .modal) ───────────── */
 .modal-box {
@@ -2212,10 +2217,16 @@ body {
   .app-header { padding:14px 20px; }
   .main-panel { padding:20px 20px; }
   .modal-box { max-height:100vh; border-radius:0; }
+  .gen-ring-wrap { width:100px; height:100px; }
+  .gen-ring-svg { width:100px; height:100px; }
+  .gen-pct-text { font-size:14px; }
 }
 
 @media (max-width: 480px) {
   .app-header { padding:12px 16px; }
   .main-panel { padding:16px 16px; }
   .skill-name { width:110px; }
+  .gen-ring-wrap { width:88px; height:88px; }
+  .gen-ring-svg { width:88px; height:88px; }
+  .gen-pct-text { font-size:13px; }
 }

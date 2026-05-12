@@ -4,7 +4,8 @@
 // No keyword matching — concept understanding is what counts.
 // ============================================================
 
-let _lastGradingTime = 0; // Cooldown enforcement
+let _lastGradingTime = 0;
+let _gradingRetry = false;
 
 // ── Grading prompt builder ────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ function buildGradingPrompt(submission, challenge) {
 
 CHALLENGE: ${challenge.title}
 SKILL BEING ASSESSED: ${challenge.skill}
-WHAT THE USER WAS ASKED TO DO: ${(challenge.taskFrame || '').split('\\n').slice(1, 4).join(' | ')}
+WHAT THE USER WAS ASKED TO DO: ${(challenge.taskFrame || '').split('\n').slice(1, 4).join(' | ')}
 
 RUBRIC — assess against each criterion:
 ${rubric.map((r, i) => `${i + 1}. ${r}`).join('\\n')}
@@ -45,7 +46,7 @@ async function gradeWithGemini(submission, challenge) {
 
   const prompt = buildGradingPrompt(submission, challenge);
   try {
-    const result = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 800);
+    const result = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 1500);
     // result should be a parsed object {score, criteria, feedback, suggestion}
     if (typeof result === 'object' && result !== null && typeof result.score === 'number') {
       return result;
@@ -54,6 +55,14 @@ async function gradeWithGemini(submission, challenge) {
     if (Array.isArray(result) && result[0]) return result[0];
     throw new Error('Unexpected grading response shape');
   } catch (err) {
+    // Auto-retry once on transient JSON/parse failures
+    if (!_gradingRetry && (err.message || '').startsWith('JSON_PARSE')) {
+      _gradingRetry = true;
+      await sleep(1500);
+      _gradingRetry = false;
+      return gradeWithGemini(submission, challenge);
+    }
+    _gradingRetry = false;
     return { error: 'api_error', message: err.message };
   }
 }
@@ -64,20 +73,14 @@ async function submitChallenge() {
   const c = MODAL.challenge;
   if (!c) return;
 
-  // Steps 0, 1, 2 — just advance (Learn, Example, Task)
-  if (MODAL.step < 3) {
+  // Steps 0, 1 — advance to next step
+  if (MODAL.step < 2) {
     MODAL.step++;
     renderModal();
     return;
   }
 
-  // Step 4 (Takeaways) — close modal
-  if (MODAL.step === 4) {
-    closeModal();
-    return;
-  }
-
-  // Step 3 — grade submission
+  // Step 2 — grade submission
   if (STATE.gradingInProgress) return;
 
   // Cooldown enforcement
@@ -152,9 +155,8 @@ async function submitChallenge() {
       showToast('Challenge complete', '+' + c.xp + ' XP · ' + score + '% score');
     }
     saveState();
-    MODAL.step = 4;
     MODAL.maxAttemptsReached = false;
-    renderModal();
+    renderModal(); // Step 2 body will show score + takeaways inline
     refreshProgressUI();
     triggerBackgroundFetch();
     const panel = document.getElementById('panel-daily');
@@ -203,7 +205,6 @@ function markAssistedComplete() {
 
   saveState();
   refreshProgressUI();
-  MODAL.step = 4;
   MODAL.maxAttemptsReached = false;
   MODAL.answerRevealed = false;
   renderModal();

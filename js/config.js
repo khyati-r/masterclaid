@@ -329,7 +329,7 @@ const APP_CONFIG = {
   XP_ASSIST_MULTIPLIER: 1.0,    // Full XP even when assisted (reviewing answer)
   STORAGE_KEY: 'masterclaid_v3',// localStorage key (bumped from v1)
   SESSION_KEY: 'mcl_ak_s',      // sessionStorage key for API key
-  APP_NAME: 'Master.ClAId',
+  APP_NAME: 'Master.CLAID',
 };
 
 // ── Tech level guidance injected into generation prompts ─────────────────────

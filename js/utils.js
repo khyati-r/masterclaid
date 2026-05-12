@@ -55,6 +55,8 @@ function setGenProgress(pct, statusText) {
     const offset = circumference * (1 - Math.min(pct, 100) / 100);
     ring.style.strokeDashoffset = offset;
   }
+  const pctEl = document.getElementById('genPct');
+  if (pctEl) pctEl.textContent = Math.round(Math.min(pct, 100)) + '%';
   if (statusEl) statusEl.textContent = statusText || '';
   // Start elapsed timer on first progress call
   if (!GEN_ELAPSED_TIMER && elapsed) {
