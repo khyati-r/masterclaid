@@ -315,7 +315,7 @@ function renderGenerating() {
       <circle cx="40" cy="40" r="36" fill="none" stroke="var(--bg3)" stroke-width="6"/>
       <circle id="genRing" cx="40" cy="40" r="36" fill="none" stroke="var(--accent)" stroke-width="6"
         stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
-        stroke-linecap="round" transform="rotate(-90 40 40)"
+        stroke-linecap="round"
         style="transition:stroke-dashoffset 0.5s ease;"/>
     </svg>
     <div id="genStatus" class="gen-status">Preparing…</div>

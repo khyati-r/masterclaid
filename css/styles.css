@@ -664,8 +664,6 @@ body {
   margin: 0 auto 40px;
 }
 
-.gen-ring-svg { transform: rotate(-90deg); }
-
 .gen-ring-bg { fill: none; stroke: var(--surface); stroke-width: 3; }
 
 .gen-ring-fill {
@@ -2139,46 +2137,85 @@ body {
 
 /* ── Import input (hidden) ────────────────────────────────────────────────── */
 .import-input { display:none; }
-EOF
-Output
 
-/* ── Landing page ─────────────────────────────────────────────────────────── */
-.landing { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 24px; background:var(--bg); }
-.landing-inner { max-width:560px; width:100%; text-align:center; }
-.logo-mark { font-size:48px; color:var(--accent); margin-bottom:16px; line-height:1; }
-.landing-title { font-size:clamp(36px,6vw,64px); font-weight:800; color:var(--text); letter-spacing:-0.02em; margin:0 0 16px; font-family:var(--display,serif); }
-.landing-sub { font-size:16px; color:var(--text2); line-height:1.7; margin:0 0 28px; }
-.landing-features { display:flex; flex-direction:column; gap:8px; margin-bottom:32px; }
-.feat { font-family:var(--mono,monospace); font-size:12px; color:var(--text3); letter-spacing:0.06em; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:8px 14px; }
+/* =====================================================================
+   APP SHELL — classes used by render.js (new structure)
+   ===================================================================== */
 
-/* ── Onboarding shell ─────────────────────────────────────────────────────── */
-.ob-shell { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 24px; background:var(--bg); }
-.ob-inner { max-width:600px; width:100%; }
-.ob-step-label { font-family:var(--mono,monospace); font-size:10px; letter-spacing:0.2em; color:var(--accent3); text-transform:uppercase; margin-bottom:8px; }
-.ob-title { font-size:24px; font-weight:700; color:var(--text); margin:0 0 20px; line-height:1.35; }
-.ob-hint { font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:20px; }
-.ob-options { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-.ob-options-multi { flex-wrap:wrap; }
-.ob-opt { background:var(--bg2); border:1px solid var(--border2); color:var(--text2); font-size:13px; padding:10px 16px; border-radius:8px; cursor:pointer; text-align:left; transition:border-color .15s,color .15s; }
-.ob-opt:hover { border-color:var(--accent3); color:var(--text); }
-.ob-opt.selected { border-color:var(--accent); color:var(--accent); background:rgba(232,213,176,0.06); }
-.ob-input { background:var(--bg2); border:1px solid var(--border2); color:var(--text); font-size:14px; padding:12px 16px; border-radius:8px; outline:none; font-family:inherit; }
-.ob-input:focus { border-color:var(--accent); }
-.ob-textarea { width:100%; min-height:140px; background:var(--bg2); border:1px solid var(--border2); color:var(--text); font-size:14px; padding:14px 16px; border-radius:8px; outline:none; resize:vertical; font-family:inherit; line-height:1.7; box-sizing:border-box; }
-.ob-textarea:focus { border-color:var(--accent); }
-.ob-charcount { font-family:var(--mono,monospace); font-size:10px; color:var(--text3); text-align:right; margin-top:4px; }
-.ob-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; flex-wrap:wrap; }
+/* ── App shell wrapper ───────────────────────────────────────────────────── */
+.app-shell { display:flex; flex-direction:column; min-height:100vh; }
 
-/* ── Buttons ──────────────────────────────────────────────────────────────── */
-.btn-primary { background:var(--accent); color:var(--bg); border:none; font-family:var(--mono,monospace); font-size:12px; font-weight:600; padding:12px 24px; border-radius:8px; cursor:pointer; letter-spacing:0.06em; transition:opacity .15s; }
-.btn-primary:hover { opacity:.88; }
-.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
-.btn-secondary { background:var(--bg2); color:var(--text2); border:1px solid var(--border2); font-family:var(--mono,monospace); font-size:12px; padding:12px 24px; border-radius:8px; cursor:pointer; letter-spacing:0.05em; }
-.btn-ghost { background:none; color:var(--text3); border:1px solid var(--border); font-family:var(--mono,monospace); font-size:11px; padding:9px 18px; border-radius:7px; cursor:pointer; letter-spacing:0.04em; transition:border-color .15s,color .15s; }
-.btn-ghost:hover { border-color:var(--accent3); color:var(--text2); }
-.btn-complete { background:var(--green); color:var(--bg); border:none; font-family:var(--mono,monospace); font-size:12px; font-weight:600; padding:12px 22px; border-radius:8px; cursor:pointer; letter-spacing:0.05em; white-space:nowrap; }
-.btn-submit { background:var(--accent); color:var(--bg); border:none; font-family:var(--mono,monospace); font-size:12px; font-weight:600; padding:11px 22px; border-radius:8px; cursor:pointer; letter-spacing:0.05em; }
-.btn-submit:disabled { opacity:.5; cursor:not-allowed; }
+/* ── App header bar ──────────────────────────────────────────────────────── */
+.app-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px; border-bottom:1px solid var(--border);
+  position:sticky; top:0;
+  background:rgba(10,10,11,0.92); backdrop-filter:blur(16px);
+  z-index:50; gap:12px;
+}
+.header-brand { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.header-logo { font-size:22px; color:var(--accent); line-height:1; }
+.header-title { font-family:var(--display); font-size:14px; font-weight:700; color:var(--accent); letter-spacing:0.08em; }
 
-/* ── Import input (hidden) ────────────────────────────────────────────────── */
-.import-input { display:none; }
+/* ── Main content panel ──────────────────────────────────────────────────── */
+.main-panel { padding:32px 40px; overflow-y:auto; flex:1; }
+
+/* ── Sidebar skill bars ──────────────────────────────────────────────────── */
+.skill-list { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
+.skill-row { display:flex; align-items:center; gap:8px; }
+.skill-name { font-family:var(--mono); font-size:10px; color:var(--text2); width:128px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.skill-bar { flex:1; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+.skill-pct { font-family:var(--mono); font-size:10px; color:var(--text3); width:28px; text-align:right; flex-shrink:0; }
+
+/* ── Sidebar stat mini-cards ─────────────────────────────────────────────── */
+.stat-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+.stat-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:12px; text-align:center; }
+.stat-label { font-family:var(--mono); font-size:9px; color:var(--text3); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+.stat-val { font-family:var(--mono); font-size:18px; color:var(--accent); font-weight:500; }
+
+/* ── Daily panel section headings ────────────────────────────────────────── */
+.ch-section-label { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; color:var(--text3); text-transform:uppercase; margin-bottom:12px; padding-left:2px; }
+
+/* ── Challenge card footer (time + output) ───────────────────────────────── */
+.ch-meta { display:flex; align-items:center; gap:12px; font-family:var(--mono); font-size:10px; color:var(--text3); letter-spacing:0.04em; margin-top:12px; }
+
+/* ── Activity log entries ────────────────────────────────────────────────── */
+.log-list { display:flex; flex-direction:column; gap:8px; }
+.log-entry { display:flex; flex-direction:column; gap:4px; padding:14px 18px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+.log-meta { display:flex; gap:10px; align-items:center; }
+.log-day { font-family:var(--mono); font-size:10px; color:var(--text3); }
+.log-right { display:flex; gap:12px; align-items:center; margin-top:4px; }
+.log-title { font-size:13px; color:var(--text); line-height:1.5; flex:1; }
+
+/* ── Generating screen ───────────────────────────────────────────────────── */
+.generating-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:60px 24px; text-align:center; background:var(--bg); }
+.gen-inner { display:flex; flex-direction:column; align-items:center; max-width:480px; width:100%; }
+
+/* ── Generating ring SVG sizing (CSS rotation already in gen-ring-svg rule) */
+.gen-ring-svg { width:120px; height:120px; display:block; transform:rotate(-90deg); }
+
+/* ── Modal box (render.js uses .modal-box; old CSS has .modal) ───────────── */
+.modal-box {
+  background:var(--bg2); border:1px solid var(--border2); border-radius:18px;
+  width:100%; max-width:760px; max-height:90vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* ── Missing keyframe for grading spinner ────────────────────────────────── */
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* =====================================================================
+   RESPONSIVE — additions for new class names (.main-panel, .modal-box)
+   ===================================================================== */
+
+@media (max-width: 768px) {
+  .app-header { padding:14px 20px; }
+  .main-panel { padding:20px 20px; }
+  .modal-box { max-height:100vh; border-radius:0; }
+}
+
+@media (max-width: 480px) {
+  .app-header { padding:12px 16px; }
+  .main-panel { padding:16px 16px; }
+  .skill-name { width:110px; }
+}

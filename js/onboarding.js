@@ -136,7 +136,7 @@ function renderRoleStep() {
     ${OB.answers.role === '__other__' ? `
     <div style="margin-top:16px;">
       <input type="text" class="ob-input" id="roleOtherInput" placeholder="Describe your role (e.g. Clinical Psychologist, HR Business Partner, Marketing Manager)"
-        value="${escapeHTML(OB.answers.roleOther)}" oninput="OB.answers.roleOther=this.value" style="width:100%;">
+        value="${escapeHTML(OB.answers.roleOther)}" oninput="OB.answers.roleOther=this.value; updateObContinueBtn(this.value.trim().length>2);" style="width:100%;">
     </div>` : ''}
   `, false, !!OB.answers.role && (OB.answers.role !== '__other__' || OB.answers.roleOther.trim().length > 2));
 }
@@ -248,7 +248,7 @@ function renderChallengeStep() {
   return obShell('Your hardest professional challenge right now', 'Step 8 of 9', `
     <p class="ob-hint">The single most important field. This is what your Capstone project will be built to solve. Write 2–4 sentences describing a real, current problem in your professional life — something that costs you time, keeps you up at night, or that you have been putting off because it is too complex.</p>
     <textarea class="ob-textarea" id="challengeInput" placeholder="Example: I spend 3–4 hours every week producing risk register updates that nobody reads in full. I want to build a process where Claude handles the data aggregation and formatting while I focus only on the judgement calls — but I do not know where to start, and I am worried about data security."
-      oninput="OB.answers.challenge=this.value">${escapeHTML(OB.answers.challenge)}</textarea>
+      oninput="OB.answers.challenge=this.value; document.getElementById('challengeCount').textContent=this.value.length+' / 600'; updateObContinueBtn(this.value.trim().length>30);">${escapeHTML(OB.answers.challenge)}</textarea>
     <div class="ob-charcount" id="challengeCount">${OB.answers.challenge.length} / 600</div>
   `, true, OB.answers.challenge.trim().length > 30);
 }
@@ -265,15 +265,15 @@ function renderApiKeyStep() {
     <div id="apiSection1" style="display:${!OB._apiPath || OB._apiPath === 1 ? 'block' : 'none'}">
       <p class="ob-hint" style="margin-top:12px;">Get a free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);">aistudio.google.com</a>. Keys start with <code>AIza</code>.</p>
       <input type="password" class="ob-input" id="geminiKey" placeholder="AIza..." style="width:100%;"
-        value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim()">
+        value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
     <div id="apiSection2" style="display:${OB._apiPath === 2 ? 'block' : 'none'}">
       <p class="ob-hint" style="margin-top:12px;">Get a Claude key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue);">console.anthropic.com</a>. Keys start with <code>sk-ant-</code>.</p>
       <input type="password" class="ob-input" id="claudeKey" placeholder="sk-ant-..." style="width:100%;"
-        value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim()">
+        value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
     <div style="margin-top:16px;">
-      <button class="btn-primary" onclick="startGeneration()" ${OB.apiKey.length > 10 ? '' : 'disabled'}>Generate my curriculum →</button>
+      <button id="genBtn" class="btn-primary" onclick="startGeneration()" ${OB.apiKey.length > 10 ? '' : 'disabled'}>Generate my curriculum →</button>
     </div>
     <p style="font-size:11px;color:var(--text3);margin-top:12px;font-family:var(--mono);letter-spacing:0.04em;">Your key is sent directly to the API. It is not stored anywhere — not on our servers, not in localStorage. It lives only in your browser session memory.</p>
   `, true, OB.apiKey.length > 10);
@@ -309,6 +309,7 @@ function obShell(title, stepLabel, bodyHtml, showBack, canContinue) {
 }
 
 function obNext() {
+  if (OB.step === 9) { startGeneration(); return; }
   OB.step = Math.min(OB.step + 1, 9);
   renderOnboarding();
 }
@@ -316,6 +317,20 @@ function obNext() {
 function obBack() {
   OB.step = Math.max(OB.step - 1, 1);
   renderOnboarding();
+}
+
+// Update the obShell Continue button in-place (avoids re-render that would lose focus)
+function updateObContinueBtn(enabled) {
+  var btn = document.querySelector('.ob-actions .btn-primary');
+  if (btn) btn.disabled = !enabled;
+}
+
+// Update both the inline Generate button and the obShell Continue button on the API key step
+function updateObApiKeyBtns(val) {
+  var enabled = val.trim().length > 10;
+  var genBtn = document.getElementById('genBtn');
+  if (genBtn) genBtn.disabled = !enabled;
+  updateObContinueBtn(enabled);
 }
 
 function toggleArr(field, value) {
