@@ -218,6 +218,87 @@ const DOMAIN_CURRICULA = [
 // For unlisted roles, buildCustomRoleApplication(profile) constructs a generic version.
 
 const ROLE_APPLICATION_MAPS = {
+  'Healthcare Professional': {
+    domain5Name: 'Clinical & Healthcare AI Workflows',
+    domain6Name: 'Advanced Healthcare AI Practice',
+    focus: 'Clinical documentation, patient communication, research synthesis, case analysis, compliance writing, care pathway design',
+    domain5Skills: ['Clinical note and summary generation with Claude', 'Patient communication and information drafting', 'Medical research synthesis and literature review', 'Clinical guideline and protocol documentation', 'Healthcare compliance and policy writing'],
+    domain6Skills: ['Complex multi-disciplinary care documentation', 'Clinical audit and quality improvement reporting', 'Patient education resource creation', 'Healthcare governance and risk documentation', 'AI-assisted diagnostic reasoning and decision support'],
+    deliverables: ['clinical summaries', 'patient letters', 'research syntheses', 'protocol documents', 'audit reports', 'care plans'],
+    frameworks: ['HIPAA', 'NHS Digital Standards', 'NICE Guidelines', 'GMC Good Medical Practice', 'CQC Standards', 'ISO 27001 Health']
+  },
+  'Teacher or Educator': {
+    domain5Name: 'Education & Teaching AI Workflows',
+    domain6Name: 'Advanced Educational AI Design',
+    focus: 'Lesson planning, curriculum design, assessment creation, student feedback, differentiation, educational resource production',
+    domain5Skills: ['Lesson plan and scheme of work creation with Claude', 'Assessment and rubric design', 'Differentiated resource creation for varied learners', 'Student feedback and report writing', 'Curriculum mapping and learning objective alignment'],
+    domain6Skills: ['Full unit and curriculum design with Claude', 'Complex formative and summative assessment suites', 'SEND and EAL resource adaptation', 'Professional development material creation', 'Educational research synthesis and evidence-based planning'],
+    deliverables: ['lesson plans', 'assessment resources', 'student reports', 'curriculum maps', 'parent communications', 'CPD materials'],
+    frameworks: ['Ofsted Inspection Framework', 'National Curriculum', 'IB Curriculum', 'SEND CoP', 'Early Career Framework']
+  },
+  'Finance or Accounting Professional': {
+    domain5Name: 'Finance & Accounting AI Workflows',
+    domain6Name: 'Advanced Financial AI Practice',
+    focus: 'Financial analysis, report writing, compliance documentation, client communication, forecasting narratives, audit preparation',
+    domain5Skills: ['Financial report and commentary generation with Claude', 'Management accounts narrative and variance analysis', 'Client communication and advice letter drafting', 'Compliance and regulatory filing preparation', 'Budget narrative and forecast documentation'],
+    domain6Skills: ['Complex financial modelling narrative and presentation', 'Board and investor report creation', 'Regulatory submission and correspondence', 'Tax advisory and planning documentation', 'M&A, due diligence, and deal documentation support'],
+    deliverables: ['management accounts', 'financial reports', 'client advice letters', 'board papers', 'compliance filings', 'forecasts'],
+    frameworks: ['IFRS', 'UK GAAP', 'FRS 102', 'SOX', 'ACCA / ACA Standards', 'ICAEW Guidelines']
+  },
+  'Legal Professional': {
+    domain5Name: 'Legal Practice AI Workflows',
+    domain6Name: 'Advanced Legal AI Application',
+    focus: 'Contract drafting, legal research, client advice letters, case analysis, compliance documentation, legal correspondence',
+    domain5Skills: ['Contract and agreement drafting with Claude', 'Legal research synthesis and case law analysis', 'Client advice and correspondence drafting', 'Legal compliance documentation', 'Precedent and template adaptation'],
+    domain6Skills: ['Complex multi-party contract drafting and review', 'Regulatory submission and authority correspondence', 'Due diligence and transaction documentation', 'Litigation strategy and brief preparation', 'Legal policy and procedure documentation'],
+    deliverables: ['contracts', 'client letters', 'research memos', 'compliance documents', 'briefs', 'due diligence reports'],
+    frameworks: ['SRA Standards & Regulations', 'BSB Handbook', 'GDPR / UK GDPR', 'Companies Act', 'FCA Regulations']
+  },
+  'HR, Operations or Marketing': {
+    domain5Name: 'HR, Ops & Marketing AI Workflows',
+    domain6Name: 'Advanced People & Operations AI',
+    focus: 'People documentation, job descriptions, policy writing, performance processes, marketing copy, internal communications, operational reporting',
+    domain5Skills: ['Job description and person specification creation with Claude', 'HR policy and procedure documentation', 'Performance review and development plan writing', 'Internal communication and change management content', 'Marketing copy and content strategy with Claude'],
+    domain6Skills: ['Complex people strategy and workforce planning documents', 'L&D programme design and material creation', 'Marketing campaign planning and multi-channel content', 'Operational process mapping and SOP documentation', 'Employee experience and engagement programme design'],
+    deliverables: ['job descriptions', 'HR policies', 'performance documents', 'internal comms', 'marketing copy', 'SOPs'],
+    frameworks: ['ACAS Codes of Practice', 'Equality Act 2010', 'CIPD Standards', 'GDPR (HR data)', 'CIM Marketing Standards']
+  },
+  'Software Developer or Data Professional': {
+    domain5Name: 'Development & Data AI Workflows',
+    domain6Name: 'Advanced Engineering AI Practice',
+    focus: 'Code generation, review, and documentation; data analysis; technical writing; architecture documentation; test creation; query generation',
+    domain5Skills: ['Code generation, review, and refactoring with Claude', 'Technical documentation and README writing', 'Data analysis and insight generation', 'SQL query and pipeline documentation', 'Test case creation and debugging workflows'],
+    domain6Skills: ['Architecture design and technical specification writing', 'Complex data pipeline and model documentation', 'API design and integration documentation', 'Code review automation and quality gate design', 'Technical blog posts and developer communication'],
+    deliverables: ['code outputs', 'technical docs', 'data analyses', 'architecture specs', 'test suites', 'API docs'],
+    frameworks: ['REST / OpenAPI', 'AWS / Azure / GCP', 'Agile / Scrum', 'SOLID principles', 'dbt / Spark / Pandas']
+  },
+  'Cybersecurity or Risk Professional': {
+    domain5Name: 'Security & Risk AI Workflows',
+    domain6Name: 'Advanced Security AI Practice',
+    focus: 'Risk registers, gap analyses, security policies, threat intelligence, compliance documentation, audit reports, board communication',
+    domain5Skills: ['Risk assessment and register creation with Claude', 'Security policy and procedure documentation', 'Compliance gap analysis and mapping', 'Threat intelligence and incident documentation', 'Audit workpaper and evidence generation'],
+    domain6Skills: ['Board-level security and risk communication', 'Complex GRC programme documentation', 'Advanced threat modelling and architecture review', 'Regulatory examination and audit preparation', 'Security strategy and roadmap development'],
+    deliverables: ['risk registers', 'security policies', 'gap analyses', 'audit reports', 'threat intelligence', 'board papers'],
+    frameworks: ['ISO 27001', 'NIST CSF', 'NIST RMF', 'CIS Controls', 'GDPR', 'DORA', 'SOC 2', 'PCI DSS']
+  },
+  'Business Owner or Manager': {
+    domain5Name: 'Business Management AI Workflows',
+    domain6Name: 'Advanced Strategy & Leadership AI',
+    focus: 'Business writing, strategy documents, operational planning, stakeholder communication, reporting, decision-making support',
+    domain5Skills: ['Business report and proposal creation with Claude', 'Stakeholder and investor communication drafting', 'Operational process documentation', 'Meeting preparation and decision-support analysis', 'Strategic planning document creation'],
+    domain6Skills: ['Full business strategy and planning documents', 'Complex stakeholder and board-level communication', 'Business development and pitch documentation', 'Change management and transformation planning', 'KPI framework and performance reporting design'],
+    deliverables: ['business reports', 'strategy documents', 'proposals', 'board papers', 'operational plans', 'stakeholder comms'],
+    frameworks: ['OKRs', 'Balanced Scorecard', 'PRINCE2 / Agile', 'Business Model Canvas', 'ISO 9001']
+  },
+  'Student or Career Changer': {
+    domain5Name: 'Career Development AI Workflows',
+    domain6Name: 'Portfolio & Career Launch with AI',
+    focus: 'Portfolio building, professional writing, study support, interview preparation, career planning, skills demonstration',
+    domain5Skills: ['Portfolio-quality project creation with Claude', 'Professional CV and cover letter writing', 'Study guide and knowledge synthesis', 'Interview preparation and scenario practice', 'Career research and opportunity analysis'],
+    domain6Skills: ['Comprehensive career portfolio project design', 'LinkedIn profile and personal brand optimisation', 'Job application strategy and outreach drafting', 'Professional development plan creation', 'Demonstrating AI skills to prospective employers'],
+    deliverables: ['portfolio pieces', 'CVs', 'cover letters', 'study guides', 'career plans', 'professional profiles'],
+    frameworks: ['Professional body frameworks relevant to target role', 'LinkedIn Best Practices', 'Skills Frameworks for target domain']
+  },
   'GRC Consultant / Risk Manager / Risk Analyst / Information Security Auditor': {
     domain5Name: 'GRC Core Workflows',
     domain6Name: 'Advanced GRC & Risk Mastery',

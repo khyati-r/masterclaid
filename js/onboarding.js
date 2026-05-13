@@ -1,6 +1,6 @@
 // ============================================================
-// onboarding.js — 10-step onboarding flow.
-// Steps: Landing → Role → Frameworks → Experience → Certs →
+// onboarding.js — 9-step onboarding flow (8 questions + landing).
+// Steps: Landing → Role → Background → Experience →
 //        Goals → Proficiency → TechLevel → Challenge → API Key
 // ============================================================
 
@@ -19,44 +19,37 @@ let OB = {
   apiKey: ''
 };
 
+// 9 broad role categories + "Other" — kept intentionally short
 const OB_ROLES = [
-  // Healthcare & Wellbeing
-  'Clinical Psychologist / Therapist / Counsellor',
-  'Medical Doctor / GP / Specialist',
-  'Nurse / Healthcare Professional / Allied Health',
-  // Education
-  'Teacher / Lecturer / Tutor / Trainer',
-  // Finance & Accounting
-  'Chartered Accountant / CPA / Finance Professional',
-  'Financial Analyst / Investment Manager / Advisor',
-  // Business & Operations
-  'HR Professional / People Operations / Recruiter',
-  'Marketing / Communications / PR Professional',
-  'Operations Manager / Business Analyst',
-  // Legal
-  'Solicitor / Barrister / Legal Professional',
-  // Tech & Data
-  'Software Developer / Engineer',
-  'Data Scientist / Data Analyst / BI Analyst',
-  // Cybersecurity
-  'GRC Consultant / Risk Manager / Compliance Officer',
-  'SOC Analyst / Threat Intelligence',
-  'Penetration Tester / Red Team',
-  'CISO / Security Director',
-  'Security Engineer / Architect',
-  'Privacy Officer / DPO',
-  // General
-  'Student / Graduate / Career Changer',
-  'Business Owner / Entrepreneur / Consultant',
+  'Healthcare Professional',
+  'Teacher or Educator',
+  'Finance or Accounting Professional',
+  'Legal Professional',
+  'HR, Operations or Marketing',
+  'Software Developer or Data Professional',
+  'Cybersecurity or Risk Professional',
+  'Business Owner or Manager',
+  'Student or Career Changer',
   '__other__'
 ];
 
-const OB_FRAMEWORKS = [
-  'ISO 27001', 'ISO 42001', 'ISO 22301', 'NIST CSF', 'NIST RMF',
-  'SOC 2', 'GDPR / UK GDPR', 'PCI DSS', 'DORA', 'CIS Controls',
-  'MITRE ATT&CK', 'OWASP', 'COBIT', 'HIPAA', 'NICE Framework',
-  'ICF (coaching)', 'BACP / BPS Guidelines', 'NHS Frameworks',
-  'IFRS / UK GAAP', 'Sarbanes-Oxley', 'MiFID II', 'FCA Handbook',
+// Combined background step — 7 framework options + 6 cert options
+const OB_BACKGROUND_FRAMEWORKS = [
+  'GDPR / UK GDPR / Data Protection',
+  'ISO Standards (27001 / 9001 / 42001)',
+  'IFRS / UK GAAP / SOX / Financial Reporting',
+  'HIPAA / NHS / Clinical Standards',
+  'PRINCE2 / PMP / Agile & Scrum',
+  'NIST / CIS / Security Frameworks',
+  'None of the above'
+];
+
+const OB_BACKGROUND_CERTS = [
+  'CISSP / CISM / CISA / Security+',
+  'ACCA / ACA / CPA / CFA',
+  'PMP / PRINCE2 / Agile Certified',
+  'CIPD (HR & People)',
+  'AWS / Azure / GCP Certified',
   'None yet'
 ];
 
@@ -64,145 +57,134 @@ const OB_EXPERIENCE = [
   'Under 1 year', '1–2 years', '3–5 years', '6–10 years', 'Over 10 years'
 ];
 
-const OB_CERTS = [
-  // Cybersecurity
-  'CISSP', 'CISM', 'CISA', 'CompTIA Security+', 'OSCP / CEH',
-  'ISO 27001 Lead Auditor / Implementer', 'CRISC',
-  // Finance & Accounting
-  'CFA', 'ACCA / ACA', 'CPA / CIMA',
-  // Management & Delivery
-  'PMP', 'PRINCE2', 'ITIL', 'Agile / Scrum',
-  // Cloud & Data
-  'AWS Certified', 'Google Cloud / Azure Certified',
-  'Google Analytics / Data Analytics Certificate',
-  // People & HR
-  'CIPD (L3, L5 or L7)',
-  // Healthcare & Coaching
-  'BPS Chartered Psychologist', 'ICF Coaching Credential',
-  'RCN / NMC Registration',
-  // Academic
-  'PhD / Masters / Postgraduate Qualification',
-  'None yet'
-];
-
 // ── Role-specific goals ────────────────────────────────────────────────────────
 
 const OB_GOALS_DEFAULT = [
+  'Learn to use Claude confidently in my daily work',
   'Save time on routine documentation and admin',
-  'Produce higher-quality professional deliverables',
-  'Learn and apply AI tools in my daily work',
-  'Automate repetitive tasks and workflows',
-  'Build AI-powered tools or processes for my team',
-  'Get ahead of peers in AI capability',
-  'Prepare for AI governance and responsible use',
-  'Develop a portfolio of AI-assisted work'
+  'Produce higher-quality professional deliverables with Claude',
+  'Build AI-powered workflows and automations for my team',
+  'Understand how to integrate Claude into existing tools and systems',
+  'Get ahead of peers in AI capability and confidence',
+  'Prepare for AI governance, ethics, and responsible use',
+  'Develop a portfolio of AI-assisted work I can showcase'
 ];
 
 const OB_GOALS_MAP = {
   clinical: [
-    'Reduce time spent on clinical documentation and notes',
-    'Improve quality of patient reports, letters and summaries',
-    'Use AI for research synthesis and literature review',
-    'Support evidence-based clinical decision making',
-    'Build workflows that protect patient confidentiality',
-    'Prepare for AI regulation and governance in healthcare',
-    'Automate administrative and scheduling tasks',
-    'Get ahead of peers in responsible AI adoption'
+    'Reduce time spent on clinical documentation using Claude',
+    'Improve quality of patient reports, letters and summaries with AI',
+    'Use Claude for research synthesis and literature review',
+    'Build workflows that protect patient confidentiality while using AI',
+    'Prepare for AI regulation and governance requirements in healthcare',
+    'Learn to use AI tools responsibly in a clinical setting',
+    'Automate administrative tasks so I can focus on patient care',
+    'Get ahead of peers in evidence-based AI adoption'
   ],
   education: [
-    'Automate lesson planning and curriculum design',
-    'Create personalised learning materials faster',
-    'Generate assessments, rubrics and detailed feedback',
-    'Reduce administrative and marking workload',
-    'Use AI to support and differentiate student learning',
-    'Build a reusable toolkit of AI resources for educators',
+    'Use Claude to plan lessons and design curriculum faster',
+    'Generate assessments, rubrics and personalised feedback with AI',
+    'Reduce administrative and marking workload with Claude',
+    'Build a reusable toolkit of AI-powered teaching resources',
+    'Understand how to teach AI literacy to students',
     'Prepare for AI governance in educational institutions',
+    'Create differentiated learning materials faster',
     'Develop a portfolio of AI-assisted teaching materials'
   ],
   finance: [
-    'Automate financial report drafting and commentary',
-    'Improve quality of client-facing deliverables',
-    'Use AI for data interpretation and variance analysis',
-    'Reduce time spent on compliance documentation',
-    'Build AI workflows for audit and review processes',
-    'Prepare for AI governance in financial services',
+    'Use Claude to draft financial reports and commentary faster',
+    'Improve quality and consistency of client-facing deliverables',
+    'Build AI workflows for analysis, audit and review processes',
+    'Reduce time on routine compliance and regulatory documentation',
+    'Prepare for AI governance and regulation in financial services',
     'Get ahead of peers in AI-enabled financial analysis',
-    'Develop a portfolio of AI-assisted work'
-  ],
-  security: [
-    'Save time on routine security documentation',
-    'Produce higher-quality professional deliverables',
-    'Learn and apply AI tools in security workflows',
-    'Automate repetitive tasks and threat reporting',
-    'Build Claude-powered workflows for my team',
-    'Prepare for AI governance responsibilities',
-    'Develop a portfolio of AI-assisted security work',
-    'Get ahead of peers in AI capability'
-  ],
-  developer: [
-    'Accelerate code review, documentation and testing',
-    'Use AI as a pair programmer for complex problems',
-    'Build AI-powered tools, APIs and automations',
-    'Learn prompt engineering for technical tasks',
-    'Improve quality of technical architecture and design docs',
-    'Build Claude-powered products and features',
-    'Get ahead of peers in AI-native engineering',
-    'Develop a portfolio of AI-assisted projects'
-  ],
-  data: [
-    'Accelerate exploratory data analysis and insight generation',
-    'Automate data documentation and model reporting',
-    'Use AI for natural language querying and summarisation',
-    'Improve quality of stakeholder-facing data stories',
-    'Build AI-assisted data pipelines and workflows',
-    'Get ahead of peers in AI-augmented analytics',
-    'Prepare for AI governance and model ethics',
-    'Develop a portfolio of AI-assisted data projects'
-  ],
-  hr: [
-    'Automate HR documentation, policy writing and templates',
-    'Improve quality of job descriptions and job adverts',
-    'Use AI to support employee relations and guidance',
-    'Build workflows for onboarding, training and development content',
-    'Save time on routine HR admin and correspondence',
-    'Prepare for AI governance in people operations',
-    'Get ahead of peers in AI-enabled HR',
-    'Develop a portfolio of AI-assisted HR work'
-  ],
-  marketing: [
-    'Produce more content, faster without sacrificing quality',
-    'Use AI for audience research and competitive analysis',
-    'Build AI-assisted content and campaign workflows',
-    'Improve consistency and quality across all copy',
-    'Automate reporting, briefing and internal communications',
-    'Get ahead of peers in AI-enabled marketing',
-    'Prepare for AI governance and brand safety',
-    'Develop a portfolio of AI-assisted campaigns'
+    'Understand how to integrate Claude into advisory workflows',
+    'Develop a portfolio of AI-assisted professional work'
   ],
   legal: [
-    'Reduce time on contract drafting and review',
-    'Improve quality of legal documents, memos and letters',
-    'Use AI for legal research and case summarisation',
-    'Build workflows for document management and due diligence',
-    'Prepare for AI governance in legal services',
+    'Use Claude to speed up contract drafting and review',
+    'Improve quality of legal documents, memos and client letters',
+    'Build AI-powered research and case summarisation workflows',
+    'Learn responsible AI use in a legal and compliance context',
+    'Prepare for AI governance and regulation in legal services',
     'Get ahead of peers in AI-enabled legal practice',
-    'Automate routine client correspondence',
+    'Automate routine client correspondence with Claude',
     'Develop a portfolio of AI-assisted legal work'
+  ],
+  security: [
+    'Use Claude to save time on security documentation and reporting',
+    'Build AI-powered risk, compliance and audit workflows',
+    'Produce higher-quality deliverables for clients and stakeholders',
+    'Automate threat intelligence and incident reporting with Claude',
+    'Prepare for AI governance and responsible AI adoption in security',
+    'Build Claude-powered workflows my team can adopt',
+    'Get ahead of peers in AI capability within cybersecurity',
+    'Develop a portfolio of AI-assisted security work'
+  ],
+  developer: [
+    'Accelerate code review, documentation and testing with Claude',
+    'Use Claude as a pair programmer for complex technical problems',
+    'Build AI-powered tools, automations and integrations',
+    'Learn prompt engineering for technical and engineering tasks',
+    'Build Claude-powered products and developer-facing features',
+    'Understand MCP, APIs and agentic AI architecture',
+    'Get ahead of peers in AI-native software development',
+    'Develop a portfolio of AI-assisted engineering projects'
+  ],
+  data: [
+    'Use Claude to accelerate data analysis and insight generation',
+    'Automate data documentation, model reporting and commentary',
+    'Build AI-assisted analytical workflows and pipelines',
+    'Improve quality of stakeholder-facing data stories and reports',
+    'Learn prompt engineering for data and analytical tasks',
+    'Prepare for AI governance, model ethics and responsible AI',
+    'Get ahead of peers in AI-augmented analytics',
+    'Develop a portfolio of AI-assisted data projects'
+  ],
+  hr_ops_marketing: [
+    'Use Claude to draft policies, job descriptions and communications faster',
+    'Build AI-assisted content and campaign workflows',
+    'Automate routine reporting, briefing and operational documentation',
+    'Improve consistency and quality of all professional copy with Claude',
+    'Understand how to integrate AI responsibly into people and ops workflows',
+    'Prepare for AI governance across business functions',
+    'Get ahead of peers in AI-enabled operations and marketing',
+    'Develop a portfolio of AI-assisted professional work'
+  ],
+  business: [
+    'Use Claude to produce strategic documents and business proposals faster',
+    'Improve quality of client presentations and stakeholder communications',
+    'Build AI-powered operational workflows and automations',
+    'Understand how to plan and govern AI adoption across a business',
+    'Use Claude to analyse and synthesise business information faster',
+    'Get ahead of peers in AI-enabled business leadership',
+    'Prepare for AI governance and responsible deployment in your organisation',
+    'Develop a portfolio of AI-assisted strategic work'
+  ],
+  student: [
+    'Learn to use Claude confidently for research and professional work',
+    'Build a portfolio of AI-assisted projects to show employers',
+    'Use AI to accelerate skill development and learning',
+    'Understand how professionals use Claude in real roles',
+    'Prepare for a career where AI capability is a competitive advantage',
+    'Learn prompt engineering and AI workflow design from scratch',
+    'Get ahead of peers entering the workforce with AI skills',
+    'Develop a professional profile demonstrating AI competence'
   ]
 };
 
 function getGoalsForRole(role) {
   if (!role || role === '__other__') return OB_GOALS_DEFAULT;
   const r = role.toLowerCase();
-  if (/psych|therap|counsel|clinic|nurse|doctor|gp|health|medical|allied/.test(r)) return OB_GOALS_MAP.clinical;
-  if (/teach|lectur|tutor|train|educat/.test(r)) return OB_GOALS_MAP.education;
-  if (/account|cpa|cima|acca|aca|finance|financial|invest|cfa/.test(r)) return OB_GOALS_MAP.finance;
-  if (/security|soc|threat|pentest|ciso|grc|risk|privacy|compliance|dpo|resilience/.test(r)) return OB_GOALS_MAP.security;
-  if (/developer|software engineer|engineer(?!.*security)/.test(r)) return OB_GOALS_MAP.developer;
-  if (/data scien|data analy|bi analy/.test(r)) return OB_GOALS_MAP.data;
-  if (/hr |human res|people ops|recruiter/.test(r)) return OB_GOALS_MAP.hr;
-  if (/market|communic|pr pro/.test(r)) return OB_GOALS_MAP.marketing;
-  if (/legal|solicitor|barrister|law/.test(r)) return OB_GOALS_MAP.legal;
+  if (/healthcare|doctor|nurse|psych|therap|clinic|gp|medical|allied/.test(r)) return OB_GOALS_MAP.clinical;
+  if (/teacher|lectur|tutor|train|educat/.test(r)) return OB_GOALS_MAP.education;
+  if (/finance|account|cpa|cima|acca|aca|cfa|financial/.test(r)) return OB_GOALS_MAP.finance;
+  if (/legal|solicitor|barrister/.test(r)) return OB_GOALS_MAP.legal;
+  if (/hr|operations|marketing|comms|communic|recruit|people ops/.test(r)) return OB_GOALS_MAP.hr_ops_marketing;
+  if (/developer|software|data scien|data analy|data prof/.test(r)) return OB_GOALS_MAP.developer;
+  if (/security|risk|grc|compliance|cyber|privacy|dpo|soc|threat/.test(r)) return OB_GOALS_MAP.security;
+  if (/business owner|manager|consultant|entrepreneur|director/.test(r)) return OB_GOALS_MAP.business;
+  if (/student|graduate|career changer|transitioning/.test(r)) return OB_GOALS_MAP.student;
   return OB_GOALS_DEFAULT;
 }
 
@@ -216,16 +198,15 @@ function renderOnboarding() {
 
 function renderOnboardingStep(step) {
   const steps = [
-    renderLanding,
-    renderRoleStep,
-    renderFrameworksStep,
-    renderExperienceStep,
-    renderCertsStep,
-    renderGoalsStep,
-    renderProficiencyStep,
-    renderTechLevelStep,
-    renderChallengeStep,
-    renderApiKeyStep
+    renderLanding,       // 0
+    renderRoleStep,      // 1
+    renderBackgroundStep,// 2 (combined frameworks + certs)
+    renderExperienceStep,// 3
+    renderGoalsStep,     // 4
+    renderProficiencyStep,// 5
+    renderTechLevelStep, // 6
+    renderChallengeStep, // 7
+    renderApiKeyStep     // 8
   ];
   const fn = steps[step];
   return fn ? fn() : '';
@@ -238,13 +219,13 @@ function renderLanding() {
   <div class="landing-inner">
     <div class="logo-mark">⬡</div>
     <h1 class="landing-title">Master.CLAID</h1>
-    <p class="landing-sub">Claude &plus; AI &plus; Domain.<br>30 days. 60 challenges. Personalised to your role, graded by AI, built around your hardest professional problem.</p>
+    <p class="landing-sub">30 days to Claude mastery — personalised to your role.<br>Build real AI skills your employer will notice.</p>
     <div class="landing-features">
-      <div class="feat">10 domains · 60 challenges · semantic grading</div>
-      <div class="feat">Foundations → Products → MCP → Agentic → Mastery</div>
-      <div class="feat">Every scenario built for your role and real-world context</div>
+      <div class="feat">10 Claude skill domains · 60 hands-on challenges · semantic grading</div>
+      <div class="feat">Foundations → Prompting → Products → MCP → Agentic → Mastery</div>
+      <div class="feat">Every scenario, example and rubric built for your actual job</div>
     </div>
-    <button class="btn-primary" onclick="obNext()">Build my profile →</button>
+    <button class="btn-primary" onclick="obNext()">Build my learning profile →</button>
     ${STATE.generated ? '<button class="btn-secondary" style="margin-top:12px;" onclick="STATE.screen=\'app\';render();">Continue where I left off</button>' : ''}
     <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;">
       <button class="btn-ghost" onclick="triggerImport()">↑ Import save</button>
@@ -257,17 +238,17 @@ function renderLanding() {
 // ── Role ──────────────────────────────────────────────────────────────────────
 
 function renderRoleStep() {
-  return obShell('Your professional role', 'Step 1 of 9', `
-    <p class="ob-hint">Every scenario, deliverable, and worked example is built for your specific role. This is the most important context signal in your curriculum.</p>
+  return obShell('What is your professional role?', 'Step 1 of 8', `
+    <p class="ob-hint">Every challenge, worked example and Claude prompt is written for your specific role. This single answer shapes the entire curriculum — be as specific as you can.</p>
     <div class="ob-options" id="roleOpts">
       ${OB_ROLES.map(r => r === '__other__'
-        ? `<button class="ob-opt ${OB.answers.role === '__other__' ? 'selected' : ''}" onclick="selectRole('__other__')">Other / Custom role</button>`
+        ? `<button class="ob-opt ${OB.answers.role === '__other__' ? 'selected' : ''}" onclick="selectRole('__other__')">Something else</button>`
         : `<button class="ob-opt ${OB.answers.role === r ? 'selected' : ''}" onclick="selectRole(${JSON.stringify(r).replace(/"/g,'&quot;')})">${escapeHTML(r)}</button>`
       ).join('')}
     </div>
     ${OB.answers.role === '__other__' ? `
     <div style="margin-top:16px;">
-      <input type="text" class="ob-input" id="roleOtherInput" placeholder="e.g. Clinical Psychologist, HR Business Partner, Financial Controller"
+      <input type="text" class="ob-input" id="roleOtherInput" placeholder="e.g. Clinical Psychologist, Product Manager, Pharmacist"
         value="${escapeHTML(OB.answers.roleOther)}" oninput="OB.answers.roleOther=this.value; updateObContinueBtn(this.value.trim().length>2);" style="width:100%;">
     </div>` : ''}
   `, false, !!OB.answers.role && (OB.answers.role !== '__other__' || OB.answers.roleOther.trim().length > 2));
@@ -275,31 +256,41 @@ function renderRoleStep() {
 
 function selectRole(r) {
   OB.answers.role = r;
-  // Clear goals when role changes so role-specific options are fresh
-  OB.answers.goals = [];
+  OB.answers.goals = []; // Reset goals so role-specific options are fresh
   renderOnboarding();
 }
 
-// ── Frameworks ────────────────────────────────────────────────────────────────
+// ── Background (frameworks + certs combined) ──────────────────────────────────
 
-function renderFrameworksStep() {
-  return obShell('Frameworks, standards and guidelines', 'Step 2 of 9', `
-    <p class="ob-hint">These appear directly in your challenge scenarios and worked examples. Select everything relevant — including what you aspire to work with.</p>
+function renderBackgroundStep() {
+  return obShell('Your professional background', 'Step 2 of 8', `
+    <p class="ob-hint">Optional, but helpful — Claude uses this to reference the right standards, terminology and professional context in every challenge scenario and worked example.</p>
+
+    <div class="ob-step-subsection">Standards &amp; frameworks you work with</div>
     <div class="ob-options ob-options-multi">
-      ${OB_FRAMEWORKS.map(f =>
+      ${OB_BACKGROUND_FRAMEWORKS.map(f =>
         `<button class="ob-opt ${OB.answers.frameworks.includes(f) ? 'selected' : ''}" onclick="toggleArr('frameworks', ${JSON.stringify(f).replace(/"/g,'&quot;')})">${escapeHTML(f)}</button>`
       ).join('')}
     </div>
-    <input type="text" class="ob-input" placeholder="Any others? (e.g. internal standards, sector-specific frameworks)" style="margin-top:14px;width:100%;"
+    <input type="text" class="ob-input" placeholder="Others — e.g. Basel III, NICE Guidelines, Ofsted, FCA Handbook, ICF" style="margin-top:10px;width:100%;margin-bottom:20px;"
       value="${escapeHTML(OB.answers.frameworksOther)}" oninput="OB.answers.frameworksOther=this.value">
+
+    <div class="ob-step-subsection">Qualifications &amp; certifications</div>
+    <div class="ob-options ob-options-multi">
+      ${OB_BACKGROUND_CERTS.map(c =>
+        `<button class="ob-opt ${OB.answers.certs.includes(c) ? 'selected' : ''}" onclick="toggleArr('certs', ${JSON.stringify(c).replace(/"/g,'&quot;')})">${escapeHTML(c)}</button>`
+      ).join('')}
+    </div>
+    <input type="text" class="ob-input" placeholder="Others — e.g. CIPD L5, BPS Chartered, OSCP, MSc, CFA Level 2" style="margin-top:10px;width:100%;"
+      value="${escapeHTML(OB.answers.certsOther)}" oninput="OB.answers.certsOther=this.value">
   `, true, true);
 }
 
 // ── Experience ────────────────────────────────────────────────────────────────
 
 function renderExperienceStep() {
-  return obShell('Years of professional experience', 'Step 3 of 9', `
-    <p class="ob-hint">Calibrates challenge depth and the assumed sophistication of your domain knowledge.</p>
+  return obShell('Years of professional experience', 'Step 3 of 8', `
+    <p class="ob-hint">Calibrates the depth and assumed knowledge in your challenge scenarios. A challenge for a new graduate should feel different to one for a 10-year specialist — even if they are learning the same Claude skill.</p>
     <div class="ob-options">
       ${OB_EXPERIENCE.map(e =>
         `<button class="ob-opt ${OB.answers.experience === e ? 'selected' : ''}" onclick="OB.answers.experience=${JSON.stringify(e).replace(/"/g,'&quot;')};renderOnboarding()">${escapeHTML(e)}</button>`
@@ -308,28 +299,13 @@ function renderExperienceStep() {
   `, true, !!OB.answers.experience);
 }
 
-// ── Certifications ────────────────────────────────────────────────────────────
-
-function renderCertsStep() {
-  return obShell('Qualifications and certifications', 'Step 4 of 9', `
-    <p class="ob-hint">Optional — helps your curriculum reference the right standards, terminology, and professional context in examples and rubrics.</p>
-    <div class="ob-options ob-options-multi">
-      ${OB_CERTS.map(c =>
-        `<button class="ob-opt ${OB.answers.certs.includes(c) ? 'selected' : ''}" onclick="toggleArr('certs', ${JSON.stringify(c).replace(/"/g,'&quot;')})">${escapeHTML(c)}</button>`
-      ).join('')}
-    </div>
-    <input type="text" class="ob-input" placeholder="Others not listed (e.g. CIPD L5, MSc, sector licence)" style="margin-top:14px;width:100%;"
-      value="${escapeHTML(OB.answers.certsOther)}" oninput="OB.answers.certsOther=this.value">
-  `, true, true);
-}
-
 // ── Goals ─────────────────────────────────────────────────────────────────────
 
 function renderGoalsStep() {
   const roleKey = OB.answers.role === '__other__' ? OB.answers.roleOther : OB.answers.role;
   const goals = getGoalsForRole(roleKey);
-  return obShell('What do you want to achieve with AI?', 'Step 5 of 9', `
-    <p class="ob-hint">Select up to 3. These shape every "Why this matters" section and your Capstone project direction.</p>
+  return obShell('What do you want to achieve with Claude?', 'Step 4 of 8', `
+    <p class="ob-hint">Select up to 3. These shape the "Why this matters" framing in every challenge and the direction of your Day 28–30 Capstone project.</p>
     <div class="ob-options ob-options-multi" id="goalsOpts">
       ${goals.map(g =>
         `<button class="ob-opt ${OB.answers.goals.includes(g) ? 'selected' : ''}" onclick="toggleGoal(${JSON.stringify(g).replace(/"/g,'&quot;')})">${escapeHTML(g)}</button>`
@@ -346,7 +322,6 @@ function toggleGoal(g) {
   } else if (OB.answers.goals.length < 3) {
     OB.answers.goals.push(g);
   }
-  // Partial update: only re-render the options, preserve the text input
   const opts = document.getElementById('goalsOpts');
   if (opts) {
     const roleKey = OB.answers.role === '__other__' ? OB.answers.roleOther : OB.answers.role;
@@ -364,14 +339,14 @@ function toggleGoal(g) {
 
 function renderProficiencyStep() {
   const OB_PROFICIENCY = [
-    'Never used an AI tool before',
+    'Never used Claude or any AI tool',
     'Tried it once or twice out of curiosity',
-    'Use it occasionally for simple tasks',
-    'Use AI tools regularly in my work',
+    'Use it occasionally — mainly for simple tasks',
+    'Use Claude or AI tools regularly in my work',
     'AI is a core part of how I work every day'
   ];
-  return obShell('Current AI usage', 'Step 6 of 9', `
-    <p class="ob-hint">How regularly you use AI tools in your work — not your technical level, that comes next.</p>
+  return obShell('How much have you used Claude or AI tools?', 'Step 5 of 8', `
+    <p class="ob-hint">This calibrates where your curriculum starts. If you are brand new, Day 1 will be fully explicit — no assumed knowledge. If you are already experienced, we skip the basics and go straight to the skills that will stretch you.</p>
     <div class="ob-options">
       ${OB_PROFICIENCY.map(p =>
         `<button class="ob-opt ${OB.answers.proficiency === p ? 'selected' : ''}" onclick="OB.answers.proficiency=${JSON.stringify(p).replace(/"/g,'&quot;')};renderOnboarding()">${escapeHTML(p)}</button>`
@@ -384,13 +359,13 @@ function renderProficiencyStep() {
 
 function renderTechLevelStep() {
   const OB_TECH_LEVEL = [
-    { value: 'none',        label: 'No-code', description: 'I prefer visual tools — no terminals or scripting' },
-    { value: 'guided',      label: 'Guided technical', description: 'I can follow step-by-step technical tutorials' },
-    { value: 'comfortable', label: 'Comfortable with code', description: 'I can read and modify code with documentation' },
-    { value: 'developer',   label: 'Developer', description: 'I write code professionally or as a regular hobby' }
+    { value: 'none',        label: 'No-code', description: 'I prefer visual tools — no terminals, no scripting' },
+    { value: 'guided',      label: 'Guided technical', description: 'I can follow step-by-step technical instructions' },
+    { value: 'comfortable', label: 'Comfortable with code', description: 'I can read and modify code given documentation' },
+    { value: 'developer',   label: 'Developer', description: 'I write code professionally or as a regular practice' }
   ];
-  return obShell('Technical comfort level', 'Step 7 of 9', `
-    <p class="ob-hint">Controls how technical MCP, API, and Agentic Workflow challenges become. Be honest — there is no wrong answer and you can always ask Claude to simplify.</p>
+  return obShell('Your technical comfort level', 'Step 6 of 8', `
+    <p class="ob-hint">Controls how technical your MCP, API integration, and Agentic Workflow challenges become. No-code users learn the same skills through visual tools — there is no less-than in any option.</p>
     <div class="ob-options" style="flex-direction:column;gap:10px;">
       ${OB_TECH_LEVEL.map(t =>
         `<button class="ob-opt ob-opt-wide ${OB.answers.techLevel === t.value ? 'selected' : ''}" onclick="OB.answers.techLevel='${t.value}';renderOnboarding()">
@@ -405,9 +380,9 @@ function renderTechLevelStep() {
 // ── Challenge ─────────────────────────────────────────────────────────────────
 
 function renderChallengeStep() {
-  return obShell('Your hardest professional challenge', 'Step 8 of 9', `
-    <p class="ob-hint">The most critical input in your profile. This directly shapes your Capstone project. Describe a real, current, specific problem in 2–4 sentences — something that costs you time, creates risk, or you have been putting off. The more concrete, the more useful your curriculum becomes.</p>
-    <textarea class="ob-textarea" id="challengeInput" placeholder="Example: I spend 3–4 hours every week on routine reports that nobody reads in full. I want to build a process where Claude handles the data aggregation and first draft while I focus only on judgement calls — but I do not know where to start."
+  return obShell('Your hardest professional challenge', 'Step 7 of 8', `
+    <p class="ob-hint">The most important input in your profile. Describe a real, current, specific problem in your work — something that costs you time, creates risk, or you have been putting off. Your Day 28–30 Capstone project is built directly from this. The more specific you are, the more useful the entire curriculum becomes.</p>
+    <textarea class="ob-textarea" id="challengeInput" placeholder="Example: I spend 3–4 hours every week drafting the same types of reports. I want to build a Claude workflow that handles the first draft while I focus on the judgement calls — but I do not know how to structure it, and I have concerns about confidentiality."
       oninput="OB.answers.challenge=this.value; document.getElementById('challengeCount').textContent=this.value.length+' / 600'; updateObContinueBtn(this.value.trim().length>30);">${escapeHTML(OB.answers.challenge)}</textarea>
     <div class="ob-charcount" id="challengeCount">${OB.answers.challenge.length} / 600</div>
   `, true, OB.answers.challenge.trim().length > 30);
@@ -416,8 +391,8 @@ function renderChallengeStep() {
 // ── API Key ───────────────────────────────────────────────────────────────────
 
 function renderApiKeyStep() {
-  return obShell('Connect your API', 'Step 9 of 9', `
-    <p class="ob-hint">Your curriculum generates directly via your API key — it goes to the provider and never passes through our servers. Stored only in browser session memory; cleared automatically when you close the tab.</p>
+  return obShell('Connect your AI provider', 'Step 8 of 8', `
+    <p class="ob-hint">Your curriculum generates directly via your API key — sent to the provider and never stored on our servers. Kept only in browser session memory; cleared automatically when you close the tab.</p>
     <div class="api-options" id="apiOptions">
       <button class="api-path-btn ${OB._apiPath === 1 || !OB._apiPath ? 'active' : ''}" onclick="setObApiPath(1)">Gemini API key <span class="badge-free">Free</span></button>
       <button class="api-path-btn ${OB._apiPath === 2 ? 'active' : ''}" onclick="setObApiPath(2)">Claude API key</button>
@@ -454,7 +429,7 @@ function startGeneration() {
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-// canContinue: true = enabled button, false = disabled button, null = hide button
+// canContinue: true = enabled button, false = disabled button (onclick still present), null = hide
 function obShell(title, stepLabel, bodyHtml, showBack, canContinue) {
   const continueBtn = canContinue === null
     ? ''
@@ -476,21 +451,21 @@ function obShell(title, stepLabel, bodyHtml, showBack, canContinue) {
 }
 
 function obNext() {
-  if (OB.step === 9) { startGeneration(); return; }
-  // Validate before advancing
+  // API key step (8) — trigger generation
+  if (OB.step === 8) { startGeneration(); return; }
+
+  // Validate steps with required inputs
   if (OB.step === 1) {
-    const canGo = !!OB.answers.role && (OB.answers.role !== '__other__' || OB.answers.roleOther.trim().length > 2);
-    if (!canGo) return;
+    if (!OB.answers.role || (OB.answers.role === '__other__' && OB.answers.roleOther.trim().length <= 2)) return;
   }
-  if (OB.step === 5) {
-    const canGo = OB.answers.goals.length > 0 || OB.answers.goalsOther.trim().length > 2;
-    if (!canGo) return;
+  if (OB.step === 4) {
+    if (OB.answers.goals.length === 0 && OB.answers.goalsOther.trim().length <= 2) return;
   }
-  if (OB.step === 8) {
-    const canGo = OB.answers.challenge.trim().length > 30;
-    if (!canGo) return;
+  if (OB.step === 7) {
+    if (OB.answers.challenge.trim().length <= 30) return;
   }
-  OB.step = Math.min(OB.step + 1, 9);
+
+  OB.step = Math.min(OB.step + 1, 8);
   renderOnboarding();
 }
 

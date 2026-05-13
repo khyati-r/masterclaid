@@ -109,7 +109,7 @@ function renderSidebar() {
   <div class="stat-card"><div class="stat-label">Done</div><div class="stat-val">${done}</div></div>
 </div>
 <div class="callout" style="margin-top:16px;font-family:var(--serif);font-style:italic;font-size:13px;border:none;background:none;padding:0;color:var(--text3);">
-  Every expert was once a beginner.
+  The best way to learn Claude is to use Claude.
 </div>`;
 }
 

@@ -74,11 +74,11 @@ function resetProgressOnly() {
   if (profile && key) {
     OB.answers = Object.assign({}, profile);
     OB.apiKey  = key;
-    OB.step    = 9; // Jump to API key step
+    OB.step    = 8; // Jump to API key step
     generateCurriculum();
   } else {
     OB.answers = Object.assign({}, profile || OB.answers);
-    OB.step = 9;
+    OB.step = 8;
     STATE.screen = 'onboarding';
     render();
     showToast('Enter your API key to regenerate', 'Your profile is intact');

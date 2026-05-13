@@ -2113,6 +2113,7 @@ body {
 .ob-shell { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 24px; background:var(--bg); }
 .ob-inner { max-width:600px; width:100%; }
 .ob-step-label { font-family:var(--mono,monospace); font-size:10px; letter-spacing:0.2em; color:var(--accent3); text-transform:uppercase; margin-bottom:8px; }
+.ob-step-subsection { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; color:var(--text3); text-transform:uppercase; margin-bottom:10px; margin-top:18px; }
 .ob-title { font-size:24px; font-weight:700; color:var(--text); margin:0 0 20px; line-height:1.35; }
 .ob-hint { font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:20px; }
 .ob-options { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
