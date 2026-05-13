@@ -1,17 +1,15 @@
 // ============================================================
 // grading.js — Semantic grading engine.
-// Submissions are evaluated by Gemini against the challenge rubric.
-// No keyword matching — concept understanding is what counts.
+// Submissions are evaluated by the AI against the challenge rubric.
+// Falls back to local scoring if the API is unavailable.
 // ============================================================
 
 let _lastGradingTime = 0;
-let _gradingRetry = false;
 
 // ── Grading prompt builder ────────────────────────────────────────────────────
 
 function buildGradingPrompt(submission, challenge) {
   const rubric = (challenge.rubric || []).slice(0, 4);
-  // Pad to 4 criteria if fewer were generated
   while (rubric.length < 4) rubric.push('Submission demonstrates engagement with the challenge task');
 
   return `You are a fair educational assessor for a professional AI mastery programme.
@@ -21,7 +19,7 @@ SKILL BEING ASSESSED: ${challenge.skill}
 WHAT THE USER WAS ASKED TO DO: ${(challenge.taskFrame || '').split('\n').slice(1, 4).join(' | ')}
 
 RUBRIC — assess against each criterion:
-${rubric.map((r, i) => `${i + 1}. ${r}`).join('\\n')}
+${rubric.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
 USER SUBMISSION (${submission.length} characters):
 ${submission.substring(0, 1800)}
@@ -36,6 +34,50 @@ Where SCORE = integer 0–100 (percentage of criteria met × 100).`;
 
 const GRADING_SYSTEM_PROMPT = 'You are an educational assessor. Return valid JSON only. No markdown, no preamble.';
 
+// ── Local fallback grader (used when API is unavailable) ──────────────────────
+// Returns a provisional score so users always get feedback.
+
+function localFallbackGrade(submission, challenge) {
+  const words = submission.trim().split(/\s+/).filter(Boolean).length;
+
+  // Length adequacy: 50 words = 40 pts, 150+ words = full 50 pts
+  const lengthScore = Math.min(50, Math.round((words / 150) * 50));
+
+  // Keyword coverage from challenge title, skill, and rubric
+  const sourceText = [
+    challenge.title || '',
+    challenge.skill || '',
+    (challenge.rubric || []).join(' ')
+  ].join(' ').toLowerCase();
+
+  const keywords = [...new Set(
+    sourceText.split(/\W+/).filter(w => w.length > 4)
+  )];
+
+  const subLower = submission.toLowerCase();
+  const covered = keywords.filter(k => subLower.includes(k)).length;
+  const termScore = keywords.length > 0
+    ? Math.min(50, Math.round((covered / Math.min(keywords.length, 12)) * 50))
+    : 30;
+
+  const score = Math.min(88, lengthScore + termScore);
+
+  const rubric = (challenge.rubric || []).slice(0, 4);
+  while (rubric.length < 4) rubric.push('Submission demonstrates engagement with the challenge task');
+
+  // Graduated thresholds so partial credit is realistic
+  const thresholds = [30, 45, 58, 70];
+  const criteria = rubric.map((text, i) => ({ text, met: score >= thresholds[i] }));
+
+  return {
+    score,
+    criteria,
+    feedback: `Provisional score — AI grader was temporarily unavailable. Your ${words}-word submission was scored locally based on length and concept coverage. Resubmit when online for a full evaluation.`,
+    suggestion: 'Resubmit for AI grading to receive detailed, criterion-by-criterion feedback.',
+    provisional: true
+  };
+}
+
 // ── Main grading function ─────────────────────────────────────────────────────
 
 async function gradeWithGemini(submission, challenge) {
@@ -45,26 +87,39 @@ async function gradeWithGemini(submission, challenge) {
   }
 
   const prompt = buildGradingPrompt(submission, challenge);
-  try {
-    const result = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 1500);
-    // result should be a parsed object {score, criteria, feedback, suggestion}
-    if (typeof result === 'object' && result !== null && typeof result.score === 'number') {
-      return result;
+
+  // Up to 3 attempts with exponential back-off
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const result = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 1500);
+      if (typeof result === 'object' && result !== null && typeof result.score === 'number') {
+        return result;
+      }
+      if (Array.isArray(result) && result[0]) return result[0];
+      throw new Error('Unexpected grading response shape');
+    } catch (err) {
+      const msg = err.message || '';
+      const isTransient =
+        msg.startsWith('JSON_PARSE') ||
+        msg.startsWith('NETWORK') ||
+        msg.includes('HTTP_429') ||
+        msg.includes('HTTP_500') ||
+        msg.includes('HTTP_503') ||
+        msg.includes('HTTP_504') ||
+        msg === 'Unexpected grading response shape';
+
+      if (isTransient && attempt < 3) {
+        await sleep(attempt * 2000); // 2 s then 4 s
+        continue;
+      }
+
+      // Non-retryable or all retries exhausted — use local fallback
+      console.warn('[grading] API unavailable after', attempt, 'attempt(s):', msg, '— using local fallback');
+      return localFallbackGrade(submission, challenge);
     }
-    // If parsed as array (shouldn't happen but handle it)
-    if (Array.isArray(result) && result[0]) return result[0];
-    throw new Error('Unexpected grading response shape');
-  } catch (err) {
-    // Auto-retry once on transient JSON/parse failures
-    if (!_gradingRetry && (err.message || '').startsWith('JSON_PARSE')) {
-      _gradingRetry = true;
-      await sleep(1500);
-      _gradingRetry = false;
-      return gradeWithGemini(submission, challenge);
-    }
-    _gradingRetry = false;
-    return { error: 'api_error', message: err.message };
   }
+
+  return localFallbackGrade(submission, challenge);
 }
 
 // ── Submit handler ────────────────────────────────────────────────────────────
@@ -108,19 +163,20 @@ async function submitChallenge() {
   // Show grading state
   STATE.gradingInProgress = true;
   MODAL.gradingInProgress = true;
-  renderModal(); // Shows loading state
+  MODAL.gradingError = null;
+  renderModal();
 
   _lastGradingTime = now;
 
-  // Call semantic grader
+  // Call semantic grader (falls back to local scorer on failure)
   const gradingResult = await gradeWithGemini(submission, c);
 
   STATE.gradingInProgress = false;
   MODAL.gradingInProgress = false;
 
-  // Handle grading failure — don't count the attempt
+  // Only hard-fail for missing API key — everything else now has a fallback
   if (gradingResult.error) {
-    STATE.attempts[c.id] = Math.max(0, attempts - 1); // Revert attempt count
+    STATE.attempts[c.id] = Math.max(0, attempts - 1);
     MODAL.gradingError = gradingResult.message;
     renderModal();
     return;
@@ -152,11 +208,12 @@ async function submitChallenge() {
       });
       addToPortfolio(c, submission, score, gradingResult.criteria || [], gradingResult.feedback || '', attempts, false);
       touchStreak();
-      showToast('Challenge complete', '+' + c.xp + ' XP · ' + score + '% score');
+      const label = gradingResult.provisional ? score + '% (provisional)' : score + '%';
+      showToast('Challenge complete', '+' + c.xp + ' XP · ' + label);
     }
     saveState();
     MODAL.maxAttemptsReached = false;
-    renderModal(); // Step 2 body will show score + takeaways inline
+    renderModal();
     refreshProgressUI();
     triggerBackgroundFetch();
     const panel = document.getElementById('panel-daily');
@@ -233,6 +290,7 @@ function renderScoreResult(scoreData, challenge) {
   const score = scoreData.score || 0;
   const passed = score >= (APP_CONFIG.PASS_THRESHOLD * 100);
   const criteria = scoreData.criteria || [];
+  const isProvisional = !!scoreData.provisional;
 
   const criteriaHtml = criteria.map(cr =>
     '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">' +
@@ -242,6 +300,9 @@ function renderScoreResult(scoreData, challenge) {
   ).join('');
 
   return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:16px;">' +
+    (isProvisional
+      ? '<div style="background:rgba(242,153,74,0.08);border:1px solid rgba(242,153,74,0.25);border-radius:6px;padding:8px 12px;margin-bottom:14px;font-family:var(--mono);font-size:10px;color:var(--orange);letter-spacing:0.04em;">⚠ Provisional score — AI grader was offline. Resubmit for a full evaluation.</div>'
+      : '') +
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
       '<div style="font-size:32px;font-weight:700;color:' + (passed ? 'var(--green)' : 'var(--orange)') + ';">' + score + '%</div>' +
       '<div>' +

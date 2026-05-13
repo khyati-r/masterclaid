@@ -249,26 +249,36 @@ function renderBrainMap() {
   // Score polygon
   const skillPts = scores.map((s, i) => pt(i, r * (s.score / 100)).join(',')).join(' ');
 
-  // Labels
+  // Labels — placed outside the data ring, with overflow:visible to prevent clipping
   let labelsSvg = '';
   scores.forEach((s, i) => {
-    const [x, y] = pt(i, r + 30);
-    const anchor = x < cx - 10 ? 'end' : x > cx + 10 ? 'start' : 'middle';
-    labelsSvg += `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="var(--mono)" font-size="10" fill="var(--text2)" letter-spacing="0.03em">${escapeHTML(s.name.substring(0, 20))}</text>`;
+    const [x, y] = pt(i, r + 36);
+    const anchor = x < cx - 8 ? 'end' : x > cx + 8 ? 'start' : 'middle';
+    // Two-line label: wrap at 16 chars
+    const name = s.name;
+    const line1 = name.length <= 16 ? name : name.substring(0, 16);
+    const line2 = name.length > 16 ? name.substring(16, 30) : '';
+    const dy2 = line2 ? 13 : 0;
+    labelsSvg += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-family="'JetBrains Mono','Courier New',monospace" font-size="10.5" fill="var(--text2)" letter-spacing="0.02em">` +
+      `<tspan x="${x.toFixed(1)}" dy="0">${escapeHTML(line1)}</tspan>` +
+      (line2 ? `<tspan x="${x.toFixed(1)}" dy="13">${escapeHTML(line2)}</tspan>` : '') +
+      `</text>`;
   });
 
   return `<div class="brain-map-wrap">
   <div class="panel-heading">Brain Map</div>
   <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Your skill coverage across all 10 domains. Updates as you complete challenges.</p>
-  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto;">
+  <div style="overflow:visible;padding:0 48px;">
+  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto;overflow:visible;">
     ${gridSvg}
     <polygon points="${skillPts}" fill="rgba(232,213,176,0.12)" stroke="var(--accent)" stroke-width="2"/>
     ${scores.map((s, i) => {
       const [x, y] = pt(i, r * (s.score / 100));
-      return `<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)"/>`;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--accent)"/>`;
     }).join('')}
     ${labelsSvg}
   </svg>
+  </div>
   <div class="domain-score-list">
     ${scores.map((s, i) => `
       <div class="domain-score-row">
