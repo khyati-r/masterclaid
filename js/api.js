@@ -56,25 +56,28 @@ async function callGeminiAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
   return parseJSONResponse(text, 'Gemini');
 }
 
-// ── Claude ────────────────────────────────────────────────────────────────────
+// ── Groq ──────────────────────────────────────────────────────────────────────
+// OpenAI-compatible endpoint. Free tier. Keys start with gsk_.
 
-async function callClaudeAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
-  LAST_PROVIDER = 'Claude';
+async function callGroqAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
+  LAST_PROVIDER = 'Groq';
   let response;
   try {
-    response = await fetch('https://api.anthropic.com/v1/messages', {
+    response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: maxTokens || 14000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: userPrompt   }
+        ],
+        max_tokens:      maxTokens || 14000,
+        temperature:     0.4,
+        response_format: { type: 'json_object' }
       })
     });
   } catch (netErr) {
@@ -88,24 +91,23 @@ async function callClaudeAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
   }
 
   const data = await response.json();
-  if (data.stop_reason === 'max_tokens') {
-    throw new Error('JSON_PARSE: Claude response truncated (hit token limit).');
+  if (data.choices?.[0]?.finish_reason === 'length') {
+    throw new Error('JSON_PARSE: Groq response truncated (hit token limit).');
   }
 
-  const text = data.content?.[0]?.text || '';
-  if (!text) throw new Error('EMPTY_RESPONSE: Claude returned no content');
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('EMPTY_RESPONSE: Groq returned no content');
 
-  return parseJSONResponse(text, 'Claude');
+  return parseJSONResponse(text, 'Groq');
 }
 
 // ── Route to provider ─────────────────────────────────────────────────────────
+// AIza → Gemini   |   gsk_ → Groq   |   anything else → Groq (forward-compat)
 
 async function callAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
   const key = (apiKey || '').trim();
-  if (key.startsWith('AIza')) {
-    return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens);
-  }
-  return callClaudeAPI(systemPrompt, userPrompt, key, maxTokens);
+  if (key.startsWith('AIza')) return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens);
+  return callGroqAPI(systemPrompt, userPrompt, key, maxTokens);
 }
 
 // ── JSON response parser ──────────────────────────────────────────────────────

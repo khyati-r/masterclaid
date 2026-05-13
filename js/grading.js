@@ -79,6 +79,7 @@ function localFallbackGrade(submission, challenge) {
 }
 
 // ── Main grading function ─────────────────────────────────────────────────────
+// 2 attempts (1 retry). Falls back to local scorer after the second failure.
 
 async function gradeWithGemini(submission, challenge) {
   const apiKey = getApiKey();
@@ -88,33 +89,25 @@ async function gradeWithGemini(submission, challenge) {
 
   const prompt = buildGradingPrompt(submission, challenge);
 
-  // Up to 3 attempts with exponential back-off
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const result = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 1500);
-      if (typeof result === 'object' && result !== null && typeof result.score === 'number') {
-        return result;
+      const raw = await callAPI(GRADING_SYSTEM_PROMPT, prompt, apiKey, 1500);
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        // Coerce score — AI may return it as a numeric string
+        const score = typeof raw.score === 'number' ? raw.score : parseInt(raw.score, 10);
+        if (!isNaN(score) && Array.isArray(raw.criteria)) {
+          raw.score = Math.max(0, Math.min(100, score));
+          return raw;
+        }
       }
-      if (Array.isArray(result) && result[0]) return result[0];
       throw new Error('Unexpected grading response shape');
     } catch (err) {
-      const msg = err.message || '';
-      const isTransient =
-        msg.startsWith('JSON_PARSE') ||
-        msg.startsWith('NETWORK') ||
-        msg.includes('HTTP_429') ||
-        msg.includes('HTTP_500') ||
-        msg.includes('HTTP_503') ||
-        msg.includes('HTTP_504') ||
-        msg === 'Unexpected grading response shape';
-
-      if (isTransient && attempt < 3) {
-        await sleep(attempt * 2000); // 2 s then 4 s
+      console.warn('[grading] Attempt', attempt, 'failed:', err.message);
+      if (attempt === 1) {
+        await sleep(1500); // short pause before single retry
         continue;
       }
-
-      // Non-retryable or all retries exhausted — use local fallback
-      console.warn('[grading] API unavailable after', attempt, 'attempt(s):', msg, '— using local fallback');
+      // Second attempt failed — use local fallback immediately
       return localFallbackGrade(submission, challenge);
     }
   }
@@ -169,15 +162,21 @@ async function submitChallenge() {
   _lastGradingTime = now;
 
   // Call semantic grader (falls back to local scorer on failure)
-  const gradingResult = await gradeWithGemini(submission, c);
+  let gradingResult;
+  try {
+    gradingResult = await gradeWithGemini(submission, c);
+  } catch (unexpectedErr) {
+    console.error('[grading] Unexpected error:', unexpectedErr);
+    gradingResult = localFallbackGrade(submission, c);
+  } finally {
+    STATE.gradingInProgress = false;
+    MODAL.gradingInProgress = false;
+  }
 
-  STATE.gradingInProgress = false;
-  MODAL.gradingInProgress = false;
-
-  // Only hard-fail for missing API key — everything else now has a fallback
-  if (gradingResult.error) {
+  // Only hard-fail for missing API key — everything else has a fallback
+  if (!gradingResult || gradingResult.error) {
     STATE.attempts[c.id] = Math.max(0, attempts - 1);
-    MODAL.gradingError = gradingResult.message;
+    MODAL.gradingError = (gradingResult && gradingResult.message) || 'Grading unavailable. Please try again.';
     renderModal();
     return;
   }

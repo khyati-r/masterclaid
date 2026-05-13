@@ -279,17 +279,8 @@ function useHint(n) {
   if (!MODAL.hintsUsed.includes(n)) {
     MODAL.hintsUsed.push(n);
     if (MODAL.step < 1) MODAL.step = 1;
+    // renderModal already re-renders all hints via MODAL.hintsUsed loop — no manual DOM insertion
     renderModal();
-    const c = MODAL.challenge;
-    if (!c) return;
-    const hintText = n === 1 ? c.hint1 : c.hint2;
-    if (!hintText) return;
-    const body = document.getElementById('modalBody');
-    if (!body) return;
-    const box = document.createElement('div');
-    box.className = 'hint-box';
-    box.innerHTML = '<div class="hint-box-label">Hint ' + n + '</div>' + escapeHTML(hintText);
-    body.insertBefore(box, body.firstChild);
   }
 }
 

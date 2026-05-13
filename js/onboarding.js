@@ -395,7 +395,7 @@ function renderApiKeyStep() {
     <p class="ob-hint">Your curriculum generates directly via your API key — sent to the provider and never stored on our servers. Kept only in browser session memory; cleared automatically when you close the tab.</p>
     <div class="api-options" id="apiOptions">
       <button class="api-path-btn ${OB._apiPath === 1 || !OB._apiPath ? 'active' : ''}" onclick="setObApiPath(1)">Gemini API key <span class="badge-free">Free</span></button>
-      <button class="api-path-btn ${OB._apiPath === 2 ? 'active' : ''}" onclick="setObApiPath(2)">Claude API key</button>
+      <button class="api-path-btn ${OB._apiPath === 2 ? 'active' : ''}" onclick="setObApiPath(2)">Groq API key <span class="badge-free">Free</span></button>
     </div>
     <div id="apiSection1" style="display:${!OB._apiPath || OB._apiPath === 1 ? 'block' : 'none'}">
       <p class="ob-hint" style="margin-top:12px;">Get a free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);">aistudio.google.com</a>. Keys start with <code>AIza</code>.</p>
@@ -403,8 +403,8 @@ function renderApiKeyStep() {
         value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
     <div id="apiSection2" style="display:${OB._apiPath === 2 ? 'block' : 'none'}">
-      <p class="ob-hint" style="margin-top:12px;">Get a Claude key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue);">console.anthropic.com</a>. Keys start with <code>sk-ant-</code>.</p>
-      <input type="password" class="ob-input" id="claudeKey" placeholder="sk-ant-…" style="width:100%;"
+      <p class="ob-hint" style="margin-top:12px;">Get a free Groq key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--blue);">console.groq.com</a>. Keys start with <code>gsk_</code>.</p>
+      <input type="password" class="ob-input" id="groqKey" placeholder="gsk_…" style="width:100%;"
         value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
     <div style="margin-top:20px;">
