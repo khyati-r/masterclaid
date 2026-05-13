@@ -105,7 +105,8 @@ function renderPortfolioByDomain() {
   const domains = getAllDomainNames(STATE.profile);
   let html = '';
 
-  for (let d = 0; d < 10; d++) {
+  // Domains 0–8: regular entries. Domain 9 (Capstone, days 28–30) gets its own section below.
+  for (let d = 0; d < 9; d++) {
     const entries = portfolio.filter(p => p.domain === d);
     if (!entries.length) continue;
     html += `<div class="portfolio-domain">
@@ -114,8 +115,8 @@ function renderPortfolioByDomain() {
     </div>`;
   }
 
-  // Capstone section (domain 9, days 28-30) gets special treatment
-  const capstone = portfolio.filter(p => p.day >= 28 && p.day <= 30);
+  // Capstone section — domain 9 / days 28–30
+  const capstone = portfolio.filter(p => p.domain === 9 || p.day >= 28);
   if (capstone.length) {
     html += `<div class="portfolio-domain portfolio-capstone">
       <div class="portfolio-domain-header">⬡ Capstone Project</div>

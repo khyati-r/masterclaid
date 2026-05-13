@@ -1,5 +1,5 @@
 // ============================================================
-// api.js — Raw HTTP calls to Gemini and Claude APIs.
+// api.js — Raw HTTP calls to Gemini and Groq APIs.
 // No prompt building here — just transport and response parsing.
 // ============================================================
 
@@ -75,9 +75,9 @@ async function callGroqAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
           { role: 'system', content: systemPrompt },
           { role: 'user',   content: userPrompt   }
         ],
-        max_tokens:      maxTokens || 14000,
-        temperature:     0.4,
-        response_format: { type: 'json_object' }
+        max_tokens:  maxTokens || 4000,
+        temperature: 0.4
+        // No response_format — generation returns arrays; json_object mode would conflict
       })
     });
   } catch (netErr) {
@@ -111,29 +111,48 @@ async function callAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
 }
 
 // ── JSON response parser ──────────────────────────────────────────────────────
-// Since we use responseMimeType:'application/json' for Gemini, responses
-// should always be clean JSON. Single parse with fallback bracket-extraction.
+// Multi-stage parser: strips fences, direct parse, single-key unwrap, bracket extract.
 
 function parseJSONResponse(text, providerName) {
   if (!text) throw new Error('JSON_PARSE: ' + providerName + ' returned empty text');
 
-  // Primary: direct parse
+  // Stage 1: strip markdown fences (```json ... ``` or ``` ... ```)
+  const stripped = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Stage 2: direct parse
   try {
-    const parsed = JSON.parse(text.trim());
+    const parsed = JSON.parse(stripped);
     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    if (parsed?.challenges && Array.isArray(parsed.challenges)) return parsed.challenges;
-    if (typeof parsed === 'object' && parsed !== null) return parsed;
+    if (parsed && typeof parsed === 'object') {
+      // Unwrap known wrapper keys
+      if (Array.isArray(parsed.challenges) && parsed.challenges.length > 0) return parsed.challenges;
+      if (Array.isArray(parsed.recommendations)) return parsed;  // resources returns full object
+      // Unwrap single-key object wrapping an array (e.g. {"items":[...]})
+      const vals = Object.values(parsed);
+      if (vals.length === 1 && Array.isArray(vals[0]) && vals[0].length > 0) return vals[0];
+      return parsed; // grading result or other plain object
+    }
   } catch (e) { /* fall through */ }
 
-  // Fallback: extract array between first [ and last ]
-  const start = text.indexOf('[');
-  const end = text.lastIndexOf(']');
-  if (start >= 0 && end > start) {
+  // Stage 3: bracket extraction — last resort for malformed wrapping
+  const arrStart = stripped.indexOf('[');
+  const arrEnd   = stripped.lastIndexOf(']');
+  if (arrStart >= 0 && arrEnd > arrStart) {
     try {
-      const parsed = JSON.parse(text.substring(start, end + 1));
-      if (Array.isArray(parsed)) return parsed;
+      const parsed = JSON.parse(stripped.substring(arrStart, arrEnd + 1));
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     } catch (e) { /* fall through */ }
   }
 
-  throw new Error('JSON_PARSE: ' + providerName + ' response is not valid JSON. Preview: ' + text.substring(0, 200));
+  // Stage 4: object extraction
+  const objStart = stripped.indexOf('{');
+  const objEnd   = stripped.lastIndexOf('}');
+  if (objStart >= 0 && objEnd > objStart) {
+    try {
+      const parsed = JSON.parse(stripped.substring(objStart, objEnd + 1));
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (e) { /* fall through */ }
+  }
+
+  throw new Error('JSON_PARSE: ' + providerName + ' response is not valid JSON. Preview: ' + stripped.substring(0, 200));
 }

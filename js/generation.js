@@ -4,6 +4,17 @@
 // roles and all domains. No GRC special-casing.
 // ============================================================
 
+// ── Provider helpers ──────────────────────────────────────────────────────────
+
+// Groq free tier: ~6K TPM. Keep each call well under that ceiling.
+function isGroqKey(key) { return (key || '').trim().startsWith('gsk_'); }
+
+// Max output tokens per call by provider
+function genMaxTokens(key) { return isGroqKey(key) ? 3800 : 14000; }
+
+// Days per background batch by provider (Groq: 2 days = 4 challenges; Gemini: 3 days = 6)
+function batchDayCount(key) { return isGroqKey(key) ? 2 : 3; }
+
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
 function buildProfileString(profile) {
@@ -157,16 +168,17 @@ async function generateCurriculum() {
     _animMsgIdx++;
   }, 500);
 
+  const groq = isGroqKey(OB.apiKey);
   const batchInfo = {
     domainIndex: 0,
     dayStart: APP_CONFIG.INITIAL_BATCH_DAYS[0],
-    dayEnd: APP_CONFIG.INITIAL_BATCH_DAYS[1],
+    dayEnd: groq ? 2 : APP_CONFIG.INITIAL_BATCH_DAYS[1], // Groq: 2 days (4 ch); Gemini: 3 days (6 ch)
     isAdvanced: false
   };
 
   try {
     const prompt = buildGenerationPrompt(STATE.profile, batchInfo, []);
-    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, OB.apiKey, 14000);
+    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, OB.apiKey, genMaxTokens(OB.apiKey));
     clearInterval(_animTimer);
 
     if (!Array.isArray(result) || result.length === 0) {
@@ -196,7 +208,7 @@ async function generateCurriculum() {
     for (let i = 0; i < 10; i++) STATE.skillScores[i] = 0;
     saveState();
 
-    setGenProgress(100, result.length + ' challenges ready — your first 3 days. More load silently as you progress.');
+    setGenProgress(100, result.length + ' challenges ready — your first ' + (groq ? '2' : '3') + ' days. More load silently as you progress.');
     stopElapsedTimer();
     await sleep(1000);
     STATE.screen = 'app';
@@ -225,11 +237,11 @@ async function triggerBackgroundFetch() {
   STATE.challengesFetching = true;
   saveState();
 
-  const fromDay   = lastDay + 1;
-  const toDay     = Math.min(fromDay + 2, 30); // 3 days per fetch = 6 challenges
+  const fromDay = lastDay + 1;
+  const days    = batchDayCount(apiKey); // Groq: 2 days, Gemini: 3 days
+  const toDay   = Math.min(fromDay + days - 1, 30);
   const nextDomainIndex = getDomainIndexFromDay(fromDay);
 
-  // Which domains have already been generated?
   const completedDomains = [];
   for (let d = 0; d < nextDomainIndex; d++) completedDomains.push(d);
 
@@ -240,12 +252,9 @@ async function triggerBackgroundFetch() {
     isAdvanced:  false
   };
 
-  const prevKey = STATE.apiKey;
-  STATE.apiKey = apiKey;
-
   try {
     const prompt = buildGenerationPrompt(STATE.profile, batchInfo, completedDomains);
-    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, apiKey, 14000);
+    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, apiKey, genMaxTokens(apiKey));
 
     if (Array.isArray(result) && result.length > 0) {
       const existingIds = new Set(STATE.challenges.map(c => c.id));
@@ -255,14 +264,12 @@ async function triggerBackgroundFetch() {
       STATE.challenges.forEach(c => { if ((c.day || 0) > maxDay) maxDay = c.day; });
       STATE.lastGeneratedDay = maxDay;
       saveState();
-      // Silently refresh daily panel if visible
       const panel = document.getElementById('panel-daily');
       if (panel && currentTab === 'daily') panel.innerHTML = renderDaily();
     }
   } catch (err) {
     console.warn('[Generation] Background fetch failed (silent):', err.message);
   } finally {
-    STATE.apiKey = prevKey;
     STATE.challengesFetching = false;
     saveState();
   }
@@ -286,7 +293,6 @@ async function enterAdvancedMode() {
   }
 
   showToast('Generating advanced challenges…', 'One API call — usually 30–40 seconds');
-  STATE.apiKey = apiKey;
 
   const batchInfo = {
     domainIndex: 6, // Extend domain application
@@ -299,7 +305,7 @@ async function enterAdvancedMode() {
 
   try {
     const prompt = buildGenerationPrompt(STATE.profile, batchInfo, completedDomains);
-    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, apiKey, 10000);
+    const result = await callAPI(GENERATION_SYSTEM_PROMPT, prompt, apiKey, genMaxTokens(apiKey));
 
     if (Array.isArray(result) && result.length > 0) {
       STATE.challenges = STATE.challenges.concat(result);
@@ -313,50 +319,45 @@ async function enterAdvancedMode() {
     }
   } catch (err) {
     showToast('Generation failed', err.message.substring(0, 80));
-  } finally {
-    STATE.apiKey = null;
   }
 }
 
 // ── Error diagnosis ───────────────────────────────────────────────────────────
 
 function diagnoseFail(err) {
-  const msg = (err && err.message) ? err.message : String(err);
-  const provider = LAST_PROVIDER || 'the API';
-  const host = provider === 'Gemini' ? 'generativelanguage.googleapis.com' : 'api.anthropic.com';
-  const console = provider === 'Gemini' ? 'aistudio.google.com/app/apikey' : 'console.anthropic.com';
+  const msg      = (err && err.message) ? err.message : String(err);
+  const provider = LAST_PROVIDER || 'AI';
+  const isGroq   = provider === 'Groq';
+  const consoleUrl = isGroq ? 'console.groq.com/keys' : 'aistudio.google.com/app/apikey';
+  const keyPrefix  = isGroq ? 'gsk_' : 'AIza';
 
   let title = 'Generation failed';
   let detail = '';
-  let canFallback = false;
 
   if (msg.startsWith('NETWORK:')) {
-    title = 'Network error — cannot reach ' + provider;
-    detail = 'Check your internet connection. If using a VPN or corporate network, try disabling it. Browser extensions (ad-blockers) sometimes block API calls — try disabling them for this page.';
+    title  = 'Network error — cannot reach ' + provider;
+    detail = 'Check your internet connection. Browser extensions (ad-blockers) can block API calls — try disabling them for this page. If on a corporate network or VPN, try disabling it.';
   } else if (msg.startsWith('HTTP_401') || msg.startsWith('HTTP_403')) {
-    title = 'Invalid API key';
-    detail = 'Your ' + provider + ' key was rejected. Check: (1) You copied it in full including the prefix (' + (provider === 'Gemini' ? 'AIza' : 'sk-ant-') + '). (2) It has not been deleted at ' + console + '. (3) No trailing spaces.';
-    canFallback = false;
+    title  = 'Invalid API key';
+    detail = 'Your ' + provider + ' key was rejected. Check: (1) You copied it in full including the prefix (' + keyPrefix + '). (2) It has not been deleted at ' + consoleUrl + '. (3) No extra spaces.';
   } else if (msg.startsWith('HTTP_429')) {
-    title = 'Rate limit hit — ' + provider + ' is busy';
-    detail = 'You\'ve hit the free tier rate limit. Wait 60 seconds and try again. If this keeps happening, your daily quota may be exhausted — check ' + console + '.';
-    canFallback = true;
+    title  = 'Rate limit reached — ' + provider + ' free tier';
+    detail = isGroq
+      ? 'Groq free tier: ~6,000 tokens/min. Wait 60 seconds and try again. For heavier use, switch to a Gemini key (250K tokens/day free).'
+      : 'Gemini free tier quota reached. Wait 60 seconds and try again, or check your quota at ' + consoleUrl + '.';
   } else if (msg.startsWith('JSON_PARSE')) {
-    title = 'Response parsing failed';
-    detail = 'The AI returned content that could not be parsed as JSON. This is usually a temporary issue. Try again — it typically works on the second attempt.';
-    canFallback = true;
+    title  = 'Response parsing failed';
+    detail = 'The AI returned content that could not be parsed as challenges. This is usually temporary — try again.';
   } else if (msg.startsWith('EMPTY_RESPONSE')) {
-    title = 'Empty response received';
-    detail = 'The API responded but returned no challenges. This is usually a temporary issue. Try again.';
-    canFallback = true;
+    title  = 'Empty response received';
+    detail = 'The API responded but returned no challenges. Usually temporary — try again.';
   } else {
-    title = 'Unexpected error';
+    title  = 'Unexpected error';
     detail = msg.substring(0, 200);
-    canFallback = true;
   }
 
   const statusEl = document.getElementById('genStatus');
-  const subEl = document.querySelector('.gen-sub');
+  const subEl    = document.querySelector('.gen-sub');
   if (statusEl) { statusEl.textContent = title; statusEl.style.color = 'var(--red)'; }
   if (subEl) {
     subEl.innerHTML =
@@ -375,6 +376,6 @@ function retryGeneration() { generateCurriculum(); }
 
 function goBackToApiKey() {
   STATE.screen = 'onboarding';
-  OB.step = 9; // API key step
+  OB.step = 8; // API key step (0-indexed, step 8 of 8)
   render();
 }

@@ -6,6 +6,7 @@
 
 let OB = {
   step: 0,
+  _apiPath: 1,  // 1 = Gemini, 2 = Groq — must be initialised so first render is correct
   answers: {
     role: '', roleOther: '',
     frameworks: [], frameworksOther: '',

@@ -76,12 +76,14 @@ function renderModal() {
     '<span class="badge ' + (c.required ? 'badge-required' : 'badge-bonus') + '">' + (c.required ? 'Required' : 'Bonus') + '</span>' +
     '<span class="badge" style="color:var(--accent);font-family:var(--mono);">+' + c.xp + ' XP</span>';
 
-  // Step progress dots
+  // Step progress dots (step 4 = takeaways view, shown as "Review")
+  const stepLabel = MODAL_STEPS[MODAL.step] || 'Review';
+  const stepDisplay = Math.min(MODAL.step + 1, MODAL_STEPS.length);
   document.getElementById('modalSteps').innerHTML =
     MODAL_STEPS.map((s, i) =>
       '<div class="modal-step-dot ' + (i < MODAL.step ? 'done' : i === MODAL.step ? 'current' : '') + '"></div>'
     ).join('') +
-    '<div class="modal-step-label">Step ' + (MODAL.step + 1) + ' of ' + MODAL_STEPS.length + ' — ' + MODAL_STEPS[MODAL.step] + '</div>';
+    '<div class="modal-step-label">Step ' + stepDisplay + ' of ' + MODAL_STEPS.length + ' — ' + stepLabel + '</div>';
 
   // Footer
   const attEl  = document.getElementById('attemptsLeft');
@@ -112,6 +114,11 @@ function renderModal() {
 
   } else if (alreadyDone) {
     if (attEl) attEl.textContent = (STATE.assistedIds || []).includes(c.id) ? 'Completed with review' : 'Completed';
+    if (btnDiv) btnDiv.innerHTML = '<button class="btn-complete" onclick="closeModal()">Close ✓</button>';
+
+  } else if (MODAL.step === 4) {
+    // Takeaways view (after skipToTakeaways)
+    if (attEl) attEl.innerHTML = '<span style="color:var(--green);font-family:var(--mono);font-size:10px;">✓ Acknowledged</span>';
     if (btnDiv) btnDiv.innerHTML = '<button class="btn-complete" onclick="closeModal()">Close ✓</button>';
 
   } else if (MODAL.step === 0) {
@@ -151,6 +158,23 @@ function renderModalBody(c) {
   if (!body) return;
   const s = MODAL.step;
   const alreadyDone = STATE.completedIds.some(cid => cid === c.id || cid === c.id + '_reviewed');
+
+  // ── Step 4: TAKEAWAYS (after skipToTakeaways / acknowledge) ──────────────────
+  if (s === 4) {
+    const takeaways = c.takeaways || [];
+    body.innerHTML =
+      '<div class="learn-tag">Key takeaways</div>' +
+      (takeaways.length
+        ? takeaways.map((t, i) =>
+            '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;">' +
+              '<div style="width:22px;height:22px;border-radius:50%;background:var(--accent3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--bg);">' + (i + 1) + '</div>' +
+              '<div style="font-size:14px;color:var(--text);line-height:1.7;">' + escapeHTML(t) + '</div>' +
+            '</div>'
+          ).join('')
+        : '<div class="callout">No takeaways available for this challenge.</div>') +
+      '<div class="callout" style="margin-top:16px;border-left-color:var(--text3);font-size:12px;color:var(--text3);">This challenge was acknowledged. Review the answer and try again to earn XP.</div>';
+    return;
+  }
 
   // ── Step 0: BRIEF (Learn + Example combined) ───────────────────────────────
   if (s === 0) {
