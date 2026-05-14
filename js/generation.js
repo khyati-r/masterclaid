@@ -37,7 +37,12 @@ function buildGenerationSystemPrompt(profile) {
     '- Scenarios = real ' + safeRole + ' situations with actual tasks, tools, pressures\n' +
     '- miniExample = actual prompt a ' + safeRole + ' would type + the Claude response they\'d get\n' +
     '- realWorldOutput = a deliverable a ' + safeRole + ' would use or share at work\n' +
-    '- rubric criteria = observable in a ' + safeRole + '\'s text submission\n' +
+    '- rubric criteria = observable in a ' + safeRole + '\'s text submission\n\n' +
+    'AMBITION STANDARD: Each challenge must require the learner to produce something they would genuinely use or show at work — not a practice exercise. The scenario must reference a real professional pressure (deadline, stakeholder, compliance requirement, cost concern). Tasks must have consequences if done poorly.\n\n' +
+    'SPECIFICITY STANDARD: Generic = bad. "Draft a summary" = bad. "Generate a 400-word executive brief for ' + safeRole + '\'s specific situation using chain-of-thought prompting to structure it" = good. Every title must name the Claude technique AND the professional deliverable.\n\n' +
+    'ANTI-REDUNDANCY: Within any single batch, no two challenges may use the same Claude feature (e.g. two Artifacts challenges = banned), cover the same professional scenario type (e.g. two report-writing challenges = banned), or share more than 1 rubric criterion.\n\n' +
+    'DIFFICULTY SCALING: Day 1 of a domain = Foundational (difficulty:1), Day 2 = Practitioner (difficulty:2), Day 3 = Advanced (difficulty:3). Required challenges must be noticeably harder than bonus challenges of the same day.\n\n' +
+    'ROLE MANDATE (HARD): Every single scenario, deliverable, professional context, stakeholder, and tool reference must be unmistakably specific to ' + safeRole + '. If you could swap the role out and the challenge would still make sense for a different role, you have failed.\n\n' +
     'Return valid JSON only. No markdown fences. Array starts with [ and ends with ].'
   );
 }
@@ -141,6 +146,8 @@ function buildGenerationPrompt(profile, batchInfo, completedDomainIndices) {
 
   const userPrompt = `ROLE MANDATE: "${roleLabel}". Every scenario, mini-example, rubric criterion, and deliverable must reflect the real daily work, language, tools, and pressures of a ${roleLabel}. Reject any generic content — if it could apply to anyone, rewrite it for this role.
 
+DOMAIN LOCK: Every challenge in this batch is for domain '${domainName}' (days ${dayStart}–${dayEnd}). The Claude technique used must match this domain's skill list. Using a technique from a different domain = failure.
+
 PROFESSIONAL PROFILE:
 ${buildProfileString(profile)}
 
@@ -158,20 +165,29 @@ Structure: 2 per day. First = required:true (must complete to advance). Second =
 Difficulty: ${diffMin}–${diffMax}. XP: 100–600 scaled to difficulty.
 ${isAdvanced ? 'ADVANCED MODE: User finished the 30-day programme. Push complexity, expect mastery-level application.' : ''}
 
+RUBRIC DEPTH RULE:
+- Difficulty 1 (Foundational): exactly 4 rubric criteria
+- Difficulty 2 (Practitioner): exactly 5 rubric criteria
+- Difficulty 3 (Advanced) or any challenge that produces an artefact/project: exactly 6 rubric criteria
+- Capstone challenges (domain 9): exactly 6 rubric criteria
+The rubric criteria must be OBSERVABLE in the text submission — not vague. Each criterion = a specific thing the grader can check for.
+
+SUBMISSION GUIDANCE: For any challenge where the output is an artefact, project, workflow, or multi-step task, the last step of taskFrame must be: "Structure your submission: include the key prompts you used, Claude's main outputs (paste as text — no screenshots), and a brief professional reflection on the quality of the result and what you would refine."
+
 FIELD STANDARDS (hard limits):
-TITLE: Concrete. Names the actual deliverable. Max 12 words.
-SCENARIO: 2–3 sentences, max 50 words. Specific ${roleLabel} moment — real problem they recognise. No generic company names (use "your organisation", "a client", "your team").
+TITLE: Concrete. Names the actual deliverable AND the Claude technique used. Max 12 words.
+SCENARIO: 2–3 sentences, max 50 words. Specific ${roleLabel} moment — real problem with real professional pressure (deadline, stakeholder, compliance, cost). No generic company names (use "your organisation", "a client", "your team").
 CONCEPT: 2 sentences, max 40 words. Plain English. One key term defined.
 WHY_MATTERS: 2 sentences, max 40 words. Concrete before/after for a ${roleLabel}.
 OUTCOME: 1 sentence, max 25 words. Start: "After this challenge, you will be able to..."
 MINI_EXAMPLE: 80–100 words. ONE actual prompt a ${roleLabel} would type + ONE actual Claude response. Real role-specific details. No preamble.
-TASK_FRAME: Numbered steps (\\n-separated). 5–8 steps, max 15 words each. Step 1 MUST be: "1. Open claude.ai in a new browser tab. If you do not have a free account, create one at claude.ai — it takes 30 seconds."
+TASK_FRAME: Numbered steps (\\n-separated). 5–8 steps, max 15 words each. Step 1 MUST be: "1. Open claude.ai in a new browser tab. If you do not have a free account, create one at claude.ai — it takes 30 seconds." For artefact/project/workflow challenges, the last step MUST follow the SUBMISSION GUIDANCE rule above.
 HINT1: One guiding question, max 25 words.
 HINT2: One concrete starting point, max 25 words.
 TAKEAWAYS: Exactly 3 strings, each max 15 words. Immediately applicable by a ${roleLabel}.
 REAL_WORLD_OUTPUT: Exact deliverable name, max 10 words.
 BEGINNER_SCAFFOLD: 1–2 sentences, max 35 words. What the user will DO. Start with a verb. Note they must paste Claude's text responses — no screenshots.
-RUBRIC: Exactly 4 strings. Each = specific, observable criterion true/false from a text submission. Bad: "Shows understanding." Good: "Submission includes at least one actual Claude prompt in quotation marks."
+RUBRIC: Variable length per RUBRIC DEPTH RULE above. Each = specific, observable criterion true/false from a text submission. Bad: "Shows understanding." Good: "Submission includes at least one actual Claude prompt in quotation marks."
 
 TOKEN BUDGET: Total output ≤ 5000 tokens. Follow all word limits.
 
@@ -180,7 +196,8 @@ id (e.g. "D${dayStart}a"…"D${dayEnd}b"), domain (0-based integer = ${domainInd
 difficulty (${diffMin}–${diffMax}), xp (100–600), required (boolean), day (${dayStart}–${dayEnd}),
 title, skill, scenario, concept, whyMatters, outcome, miniExample,
 taskFrame (\\n-separated steps), hint1, hint2, takeaways (3 strings),
-realWorldOutput, timeEst ("20–30 min"), beginnerScaffold, rubric (4 strings).
+realWorldOutput, timeEst ("20–30 min"), beginnerScaffold,
+rubric (array of strings — 4 for difficulty 1, 5 for difficulty 2, 6 for difficulty 3 or artefact/project/capstone challenges — per RUBRIC DEPTH RULE above).
 
 Return ONLY a valid JSON array. No markdown, no preamble. Start with [ and end with ].`;
 
