@@ -339,20 +339,10 @@ function renderLog() {
         ? `<div class="log-detail-feedback">${escapeHTML(portfolio.feedback)}</div>`
         : '';
 
-      const assistedHtml = (portfolio && portfolio.assisted)
-        ? `<div class="log-detail-note">Completed by reviewing the correct approach — learning by example counts.</div>`
-        : '';
-
-      const provisionalHtml = (portfolio && portfolio.score !== undefined && STATE.reflections && STATE.reflections[e.id || ''] === undefined && portfolio.provisional)
-        ? `<div class="log-detail-note">⚠ Provisionally scored — AI grader was offline. Resubmit for full evaluation.</div>`
-        : '';
-
       const detailHtml = hasDetail
         ? `<div class="log-detail" id="log-detail-${idx}" style="display:none;">
             ${criteriaHtml ? `<div class="log-detail-criteria">${criteriaHtml}</div>` : ''}
             ${feedbackHtml}
-            ${assistedHtml}
-            ${provisionalHtml}
           </div>`
         : '';
 

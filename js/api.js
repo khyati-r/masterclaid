@@ -139,11 +139,24 @@ function getRateLimitDisplay(apiKey) {
 
 // ── Gemini ────────────────────────────────────────────────────────────────────
 
-async function callGeminiAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
+// useJsonMode: when true, sets responseMimeType:'application/json' in generationConfig.
+// Pass false for grading calls — some Gemini model versions behave better without it
+// for single-object responses, and it avoids triggering JSON-mode restrictions.
+async function callGeminiAPI(systemPrompt, userPrompt, apiKey, maxTokens, useJsonMode) {
   LAST_PROVIDER = 'Gemini';
+  // Default useJsonMode to true for backward compatibility (generation calls)
+  const jsonMode = (useJsonMode === undefined || useJsonMode === null) ? true : !!useJsonMode;
   const model = 'gemini-2.5-flash';
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
     model + ':generateContent?key=' + encodeURIComponent(apiKey);
+
+  const generationConfig = {
+    temperature: 0.4,
+    maxOutputTokens: maxTokens || 14000
+  };
+  if (jsonMode) {
+    generationConfig.responseMimeType = 'application/json';
+  }
 
   let response;
   try {
@@ -153,11 +166,7 @@ async function callGeminiAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: maxTokens || 14000,
-          responseMimeType: 'application/json'
-        }
+        generationConfig
       })
     });
   } catch (netErr) {
@@ -257,7 +266,8 @@ async function callAPI(systemPrompt, userPrompt, apiKey, maxTokens) {
   const key = (apiKey || '').trim();
   const rl = checkRateLimit(key);
   if (!rl.allowed) throw new Error('RATE_LIMIT: ' + rl.message);
-  if (key.startsWith('AIza')) return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens);
+  // Generation calls use JSON mode (true) for structured array responses
+  if (key.startsWith('AIza')) return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens, true);
   return callGroqAPI(systemPrompt, userPrompt, key, maxTokens);
 }
 
@@ -270,7 +280,8 @@ async function callAPIForGrading(systemPrompt, userPrompt, apiKey, maxTokens) {
   const key = (apiKey || '').trim();
   const rl = checkRateLimit(key);
   if (!rl.allowed) throw new Error('RATE_LIMIT: ' + rl.message);
-  if (key.startsWith('AIza')) return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens || 1500);
+  // Grading uses useJsonMode=false — avoids responseMimeType restrictions for single-object responses
+  if (key.startsWith('AIza')) return callGeminiAPI(systemPrompt, userPrompt, key, maxTokens || 1500, false);
   return callGroqAPI(systemPrompt, userPrompt, key, maxTokens || 1500, 'llama-3.1-8b-instant');
 }
 

@@ -2125,7 +2125,7 @@ body {
 /* ── Panel heading ────────────────────────────────────────── */
 .panel-heading { font-size:20px; font-weight:700; color:var(--text); margin-bottom:8px; }
 /* ── Landing page ─────────────────────────────────────────────────────────── */
-.landing { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 24px; background:var(--bg); }
+.landing { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 24px; background:var(--bg); }
 .landing-inner { max-width:560px; width:100%; text-align:center; }
 .logo-mark { font-size:48px; color:var(--accent); margin-bottom:16px; line-height:1; }
 .landing-title { font-size:clamp(36px,6vw,64px); font-weight:800; color:var(--text); letter-spacing:-0.02em; margin:0 0 16px; font-family:var(--display,serif); }
@@ -2305,14 +2305,14 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  margin: 28px 0 32px;
+  margin: 28px 0 20px;
   text-align: left;
 }
 .landing-diff-card {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px 18px;
+  padding: 14px 18px;
 }
 .landing-diff-icon {
   font-size: 22px;
@@ -2332,7 +2332,7 @@ body {
 }
 
 .landing-how {
-  margin: 32px 0;
+  margin: 20px 0;
   text-align: left;
 }
 .landing-how-label {
@@ -2355,7 +2355,7 @@ body {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px 20px;
+  padding: 12px 16px;
 }
 .landing-step-num {
   width: 28px;

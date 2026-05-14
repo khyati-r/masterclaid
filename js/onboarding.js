@@ -34,18 +34,19 @@ const OB_ROLES = [
   '__other__'
 ];
 
-// Combined background — single list of 8 universal options covering both
+// Combined background — single list of 10 universal options covering both
 // standards/frameworks and qualifications. Selections go into OB.answers.frameworks.
 const OB_BACKGROUND = [
-  'GDPR / UK GDPR / Data Protection',
-  'ISO Standards (27001 / 9001 / 42001)',
-  'HIPAA / NHS / Clinical Standards',
+  'GDPR / UK GDPR / Data Protection Act',
+  'ISO 27001 / ISO 9001 / ISO 42001 (AI)',
+  'HIPAA / NHS Digital / Clinical Safety Standards',
   'IFRS / UK GAAP / SOX / Financial Reporting',
+  'NIST CSF / CIS Controls / NIST RMF',
   'CISSP / CISM / CISA / CompTIA Security+',
-  'ACCA / ACA / CPA / CFA',
-  'PMP / PRINCE2 / Agile / Scrum',
-  'AWS / Azure / GCP Cloud Certified',
-  'None / Not applicable'
+  'ACCA / ACA / CIMA / CFA / CPA',
+  'PMP / PRINCE2 / SAFe / Agile / Scrum',
+  'AWS / Azure / GCP Certified (any tier)',
+  'None / not currently applicable'
 ];
 
 const OB_EXPERIENCE = [
@@ -272,23 +273,15 @@ function renderLanding() {
       </div>
     </div>
 
-    <!-- Feature pills -->
-    <div class="landing-features">
-      <div class="feat">10 domains · 60 challenges · AI-graded feedback on every submission</div>
-      <div class="feat">Foundations → Prompting → Products → MCP → Agentic → Your Role → Capstone</div>
-      <div class="feat">Capstone project built from your actual hardest professional challenge</div>
-      <div class="feat">Free to use · API key goes directly to providers · no data stored on servers</div>
-    </div>
-
     <!-- CTA -->
-    <div class="landing-cta">
+    <div style="text-align:center;margin-top:28px;">
       <button class="btn-primary" style="font-size:14px;padding:14px 32px;" onclick="obNext()">Build my learning profile →</button>
       ${STATE.generated ? '<button class="btn-secondary" style="margin-left:12px;" onclick="STATE.screen=\'app\';render();">Continue where I left off</button>' : ''}
     </div>
-    <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;">
-      <button class="btn-ghost" onclick="triggerImport()">↑ Import save</button>
+    <div style="margin-top:16px;text-align:center;">
+      <button class="btn-ghost" style="font-size:10px;padding:6px 12px;color:var(--text3);" onclick="triggerImport()">↑ Import save</button>
+      <input type="file" id="importFile" class="import-input" accept=".json" onchange="importSave(event)">
     </div>
-    <input type="file" id="importFile" class="import-input" accept=".json" onchange="importSave(event)">
 
   </div>
 </div>`;
@@ -322,15 +315,15 @@ function selectRole(r) {
 // ── Background (standards + qualifications — single unified list) ─────────────
 
 function renderBackgroundStep() {
-  return obShell('Your professional background', 'Step 2 of 8', `
-    <p class="ob-hint">Optional but valuable — Claude uses this to reference the right standards, terminology, and professional context in every challenge. Select everything that applies to your work.</p>
+  return obShell('Certifications, standards & frameworks you use or work with', 'Step 2 of 8', `
+    <p class="ob-hint">Select any you currently hold, actively use, are implementing, or are working towards. This lets Claude reference the right standards, terminology, and compliance context throughout your challenges.</p>
 
     <div class="ob-options ob-options-multi">
       ${OB_BACKGROUND.map(item =>
         `<button class="ob-opt ${OB.answers.frameworks.includes(item) ? 'selected' : ''}" onclick="toggleArr('frameworks', ${JSON.stringify(item).replace(/"/g,'&quot;')})">${escapeHTML(item)}</button>`
       ).join('')}
     </div>
-    <input type="text" class="ob-input" placeholder="Anything else relevant — e.g. CIPD L5, FCA Handbook, NICE Guidelines, OSCP, Basel III…" style="margin-top:12px;width:100%;"
+    <input type="text" class="ob-input" placeholder="Other qualifications or frameworks not listed — e.g. CIPD L5, FCA Handbook, NICE Guidelines, OSCP, TOGAF, CCNA…" style="margin-top:12px;width:100%;"
       value="${escapeHTML(OB.answers.frameworksOther)}" oninput="OB.answers.frameworksOther=this.value">
   `, true, true);
 }
