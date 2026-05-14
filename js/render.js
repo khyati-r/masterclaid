@@ -27,7 +27,17 @@ function canAdvanceDay() {
 // ── Main app shell ────────────────────────────────────────────────────────────
 
 function renderApp() {
-  const rank = getRankForXP(STATE.xp);
+  const rank   = getRankForXP(STATE.xp);
+  const apiKey = getApiKey();
+  const rl     = apiKey ? getRateLimitDisplay(apiKey) : null;
+  // Rate limit badge — only shown for Groq keys with at least 1 call made today
+  const rlBadge = (rl && rl.calls > 0)
+    ? `<div class="rl-badge${rl.blocked ? ' rl-danger' : rl.warning ? ' rl-warn' : ''}"
+          title="Groq API today: ${rl.calls}/${rl.maxCalls} calls · ${Math.round(rl.tokens/1000)}K/${Math.round(rl.maxTokens/1000)}K tokens">
+          ${rl.calls}/${rl.maxCalls} calls
+       </div>`
+    : '';
+
   return `
 <div class="app-shell">
   <div class="app-header">
@@ -39,6 +49,7 @@ function renderApp() {
       </div>
     </div>
     <div class="header-actions">
+      ${rlBadge}
       <div class="rank-display">${escapeHTML(rank.name)}</div>
       <span style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.05em;">Day ${STATE.currentDay} · ${STATE.xp} XP</span>
       <button class="export-btn" onclick="exportSave()" title="Export save file">↓ Save</button>
@@ -89,11 +100,14 @@ function switchTab(tab) {
 function renderSidebar() {
   const domainNames = getAllDomainNames(STATE.profile);
   const skillBars = domainNames.map((name, i) => {
-    const score = STATE.skillScores[i] || 0;
+    const score      = STATE.skillScores[i] || 0;
+    const isComplete = score >= 100;
     return `<div class="skill-row">
-      <div class="skill-name">${escapeHTML(name)}</div>
-      <div class="skill-bar"><div class="skill-bar-fill" style="width:${score}%;"></div></div>
-      <div class="skill-pct">${score}%</div>
+      <div class="skill-row-top">
+        <span class="skill-name">${escapeHTML(name)}</span>
+        <span class="skill-pct${isComplete ? ' skill-pct-done' : ''}">${score}%${isComplete ? ' ✓' : ''}</span>
+      </div>
+      <div class="skill-bar"><div class="skill-bar-fill" style="width:${score}%;${isComplete ? 'background:var(--green);' : ''}"></div></div>
     </div>`;
   }).join('');
 
@@ -202,22 +216,32 @@ function renderChallengeCard(c) {
 // ── Day advance ───────────────────────────────────────────────────────────────
 
 function advanceDay() {
-  const maxDay = STATE.challenges.filter(c => c.day > 30).length > 0 ? 35 : 30;
-  if (STATE.currentDay <= maxDay) {
-    captureSkillSnapshot();
-    STATE.currentDay = Math.min(STATE.currentDay + 1, maxDay + 1);
-    updateCurrentDomain();
-    touchStreak();
-    saveState();
-    triggerBackgroundFetch();
+  const hasAdvanced = STATE.challenges.filter(c => c.day > 30).length > 0;
+  const maxDay = hasAdvanced ? 35 : 30;
 
-    if (STATE.currentDay > 30 && STATE.challenges.filter(c => c.day > 30).length === 0) {
-      STATE.screen = 'complete';
-      render();
-    } else {
-      currentTab = 'daily';
-      render();
-    }
+  // Guard — don't advance past the real end
+  if (STATE.currentDay > maxDay) {
+    STATE.screen = 'complete';
+    render();
+    return;
+  }
+
+  captureSkillSnapshot();
+  STATE.currentDay = Math.min(STATE.currentDay + 1, maxDay + 1);
+  updateCurrentDomain();
+  touchStreak();
+  saveState();
+  triggerBackgroundFetch();
+
+  // Completion conditions:
+  // 1. Finished core 30 days with no advanced challenges loaded
+  // 2. Finished all 35 advanced days
+  if ((STATE.currentDay > 30 && !hasAdvanced) || STATE.currentDay > 35) {
+    STATE.screen = 'complete';
+    render();
+  } else {
+    currentTab = 'daily';
+    render();
   }
 }
 

@@ -4,6 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Master.ClAId — 30-day personalised AI mastery curriculum built around your professional context.">
+  <!--
+    Content-Security-Policy:
+    · connect-src restricts fetch() to only Gemini + Groq API endpoints.
+      If XSS occurs, exfiltration to attacker-controlled hosts is blocked.
+    · frame-ancestors 'none' prevents clickjacking.
+    · object-src 'none' blocks Flash/plugin execution.
+    · base-uri 'self' prevents base-tag injection.
+    · script-src includes 'unsafe-inline' because the app uses inline onclick
+      handlers throughout. This is the correct pragmatic trade-off for a
+      fully static vanilla-JS app without a build pipeline.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    font-src 'self' data:;
+    connect-src https://generativelanguage.googleapis.com https://api.groq.com;
+    img-src 'self' data: blob:;
+    object-src 'none';
+    base-uri 'self';
+    frame-ancestors 'none';
+  ">
   <title>Master.ClAId</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>

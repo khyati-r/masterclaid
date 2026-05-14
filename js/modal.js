@@ -96,7 +96,9 @@ function renderModal() {
     if (btnDiv) btnDiv.innerHTML = '<button class="btn-submit" disabled style="opacity:0.6;">Evaluating… ●</button>';
 
   } else if (MODAL.gradingError) {
-    if (attEl) attEl.innerHTML = '<span style="color:var(--red);font-family:var(--mono);font-size:10px;">Grading failed — no attempt counted</span>';
+    if (attEl) attEl.innerHTML =
+      '<span style="color:var(--red);font-family:var(--mono);font-size:10px;">' +
+      escapeHTML(MODAL.gradingError) + '</span>';
     if (btnDiv) btnDiv.innerHTML =
       backBtn +
       '<button onclick="MODAL.gradingError=null;renderModal();" style="background:var(--accent);border:none;color:var(--bg);font-family:var(--mono);font-size:11px;padding:10px 20px;border-radius:6px;cursor:pointer;">Retry →</button>';
@@ -191,9 +193,9 @@ function renderModalBody(c) {
           ? '<div class="beginner-scaffold">' +
               '<div class="beginner-scaffold-label">In plain English — what you will actually do</div>' +
               escapeHTML(c.beginnerScaffold) +
-              '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.06em;">▸ Open <a href="https://claude.ai" target="_blank" style="color:var(--blue);">claude.ai</a> in a new tab. Submit text — do not paste screenshots.</div>' +
+              '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.06em;">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab. Submit text — do not paste screenshots.</div>' +
             '</div>'
-          : '<div class="callout" style="margin-bottom:16px;">▸ Open <a href="https://claude.ai" target="_blank" style="color:var(--blue);">claude.ai</a> in a new tab. Copy and paste Claude\'s responses as text when you submit.</div>') +
+          : '<div class="callout" style="margin-bottom:16px;">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab. Copy and paste Claude\'s responses as text when you submit.</div>') +
 
         '<div class="learn-block"><div class="learn-block-label">What this skill is</div><div class="learn-block-body">' + escapeHTML(concept) + '</div></div>' +
         '<div class="learn-block"><div class="learn-block-label">Why it matters in your work</div><div class="learn-block-body">' + escapeHTML(whyMatters) + '</div></div>' +

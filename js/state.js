@@ -134,6 +134,27 @@ function updateCurrentDomain() {
   }
 }
 
+// ── Skill score recalculation ─────────────────────────────────────────────────
+// Completion-based: score = (required challenges passed / total required) × 100.
+// A domain reaches 100% only when ALL required challenges in it are completed.
+// Assisted completions (answer-revealed) do NOT count toward the score.
+
+function recalculateSkillScores() {
+  const scores = {};
+  for (let d = 0; d < 10; d++) {
+    const required = (STATE.challenges || []).filter(c => c.domain === d && c.required === true);
+    if (!required.length) {
+      // No required challenges generated yet — preserve existing score
+      scores[d] = STATE.skillScores[d] || 0;
+      continue;
+    }
+    // Only clean passes (not assisted) count for the 100% threshold
+    const passed = required.filter(c => STATE.completedIds.includes(c.id)).length;
+    scores[d] = Math.round((passed / required.length) * 100);
+  }
+  return scores;
+}
+
 // ── Skill history snapshot ────────────────────────────────────────────────────
 // Called every time the user advances a day
 
@@ -183,9 +204,20 @@ function importSave(event) {
       SAFE_IMPORT_FIELDS.forEach(f => {
         if (data[f] !== undefined) STATE[f] = data[f];
       });
-      // Sanitise array fields to prevent injection
-      if (!Array.isArray(STATE.challenges)) STATE.challenges = [];
+      // Sanitise and bound array fields to prevent memory exhaustion or injection
+      if (!Array.isArray(STATE.challenges))   STATE.challenges   = [];
       if (!Array.isArray(STATE.completedIds)) STATE.completedIds = [];
+      if (!Array.isArray(STATE.assistedIds))  STATE.assistedIds  = [];
+      if (!Array.isArray(STATE.portfolio))    STATE.portfolio    = [];
+      if (!Array.isArray(STATE.log))          STATE.log          = [];
+      if (!Array.isArray(STATE.skillHistory)) STATE.skillHistory = [];
+      // Hard size caps — imported files over these limits are likely corrupted or crafted
+      if (STATE.challenges.length   > 300) STATE.challenges   = STATE.challenges.slice(0, 300);
+      if (STATE.completedIds.length > 600) STATE.completedIds = STATE.completedIds.slice(0, 600);
+      if (STATE.assistedIds.length  > 300) STATE.assistedIds  = STATE.assistedIds.slice(0, 300);
+      if (STATE.portfolio.length    > 300) STATE.portfolio    = STATE.portfolio.slice(0, 300);
+      if (STATE.log.length          > 500) STATE.log          = STATE.log.slice(0, 500);
+      if (STATE.skillHistory.length > 100) STATE.skillHistory = STATE.skillHistory.slice(0, 100);
       STATE.apiKey = null;
       STATE.challengesFetching = false;
       STATE.gradingInProgress = false;

@@ -399,12 +399,12 @@ function renderApiKeyStep() {
       <button class="api-path-btn ${OB._apiPath === 2 ? 'active' : ''}" onclick="setObApiPath(2)">Groq API key <span class="badge-free">Free</span></button>
     </div>
     <div id="apiSection1" style="display:${!OB._apiPath || OB._apiPath === 1 ? 'block' : 'none'}">
-      <p class="ob-hint" style="margin-top:12px;">Get a free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);">aistudio.google.com</a>. Keys start with <code>AIza</code>.</p>
+      <p class="ob-hint" style="margin-top:12px;">Get a free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">aistudio.google.com</a>. Keys start with <code>AIza</code>.</p>
       <input type="password" class="ob-input" id="geminiKey" placeholder="AIza…" style="width:100%;"
         value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
     <div id="apiSection2" style="display:${OB._apiPath === 2 ? 'block' : 'none'}">
-      <p class="ob-hint" style="margin-top:12px;">Get a free Groq key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--blue);">console.groq.com</a>. Keys start with <code>gsk_</code>.</p>
+      <p class="ob-hint" style="margin-top:12px;">Get a free Groq key at <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">console.groq.com</a>. Keys start with <code>gsk_</code>.</p>
       <input type="password" class="ob-input" id="groqKey" placeholder="gsk_…" style="width:100%;"
         value="${escapeHTML(OB.apiKey)}" oninput="OB.apiKey=this.value.trim(); updateObApiKeyBtns(this.value);">
     </div>
@@ -421,10 +421,17 @@ function setObApiPath(n) {
 }
 
 function startGeneration() {
-  if (!OB.apiKey || OB.apiKey.length < 10) {
+  const key = (OB.apiKey || '').trim();
+  if (!key || key.length < 10) {
     showToast('API key required', 'Paste your API key before generating');
     return;
   }
+  // Validate key format — prevents accidental pasting of the wrong value
+  if (!key.startsWith('AIza') && !key.startsWith('gsk_')) {
+    showToast('Unrecognised key format', 'Gemini keys start with AIza · Groq keys start with gsk_');
+    return;
+  }
+  OB.apiKey = key; // Ensure trimmed value is stored
   generateCurriculum();
 }
 

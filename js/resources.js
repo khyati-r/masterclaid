@@ -70,7 +70,9 @@ function renderResourcesContent(recommendations) {
   html += '<div class="resource-section-label">Claude product links</div>';
   html += '<div class="resource-grid">';
   CURATED_RESOURCE_LINKS.forEach(link => {
-    html += `<a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" class="resource-card">
+    // isSafeUrl guards against javascript: or data: URIs (defence-in-depth — these are hardcoded)
+    if (!isSafeUrl(link.url)) return;
+    html += `<a href="${escapeHTML(link.url)}" target="_blank" rel="noopener noreferrer" class="resource-card">
       <div class="rc-title">${escapeHTML(link.title)}</div>
       <div class="rc-desc">${escapeHTML(link.description)}</div>
       <div class="rc-url">${escapeHTML(link.url)}</div>
