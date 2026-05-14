@@ -30,11 +30,11 @@ function renderApp() {
   const rank   = getRankForXP(STATE.xp);
   const apiKey = getApiKey();
   const rl     = apiKey ? getRateLimitDisplay(apiKey) : null;
-  // Rate limit badge — only shown for Groq keys with at least 1 call made today
+  // Rate limit badge — shown for both Groq and Gemini once at least 1 call made today
   const rlBadge = (rl && rl.calls > 0)
     ? `<div class="rl-badge${rl.blocked ? ' rl-danger' : rl.warning ? ' rl-warn' : ''}"
-          title="Groq API today: ${rl.calls}/${rl.maxCalls} calls · ${Math.round(rl.tokens/1000)}K/${Math.round(rl.maxTokens/1000)}K tokens">
-          ${rl.calls}/${rl.maxCalls} calls
+          title="${escapeHTML(rl.provider)} today: ${rl.calls}${rl.maxCalls ? '/' + rl.maxCalls : ''} calls · ${Math.round((rl.tokens || 0) / 1000)}K tokens">
+          ${escapeHTML(rl.provider)}: ${rl.calls}${rl.maxCalls ? '/' + rl.maxCalls : ''} calls
        </div>`
     : '';
 
@@ -291,7 +291,7 @@ function renderBrainMap() {
 
   return `<div class="brain-map-wrap">
   <div class="panel-heading">Brain Map</div>
-  <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Your skill coverage across all 10 domains. Updates as you complete challenges.</p>
+  <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Your skill coverage across all 10 domains. Updates as you complete challenges. Detailed progress bars are in the sidebar.</p>
   <div style="overflow:visible;padding:0 48px;">
   <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto;overflow:visible;">
     ${gridSvg}
@@ -303,14 +303,6 @@ function renderBrainMap() {
     ${labelsSvg}
   </svg>
   </div>
-  <div class="domain-score-list">
-    ${scores.map((s, i) => `
-      <div class="domain-score-row">
-        <span class="domain-score-name">${escapeHTML(s.name)}</span>
-        <div class="domain-score-bar"><div class="domain-score-fill" style="width:${s.score}%"></div></div>
-        <span class="domain-score-pct">${s.score}%</span>
-      </div>`).join('')}
-  </div>
 </div>`;
 }
 
@@ -321,22 +313,77 @@ function renderLog() {
   if (!log.length) return `<div class="empty-state">No activity yet. Complete your first challenge to see your log.</div>`;
 
   return `<div class="panel-heading">Activity Log</div>
+  <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Click any entry to expand detailed feedback and criteria.</p>
   <div class="log-list">
-    ${log.map(e => `
-      <div class="log-entry">
-        <div class="log-meta">
-          <span class="log-date">${escapeHTML(e.date || '')}</span>
-          <span class="log-day">Day ${e.day || 1}</span>
+    ${log.map((e, idx) => {
+      // Look up the matching portfolio entry for richer detail
+      const portfolio = (STATE.portfolio || []).find(p =>
+        (e.id && p.id === e.id) ||
+        (p.title === e.title && p.day === e.day)
+      );
+      const hasDetail = !!(portfolio && (
+        (portfolio.criteria && portfolio.criteria.length) ||
+        portfolio.feedback
+      ));
+
+      const criteriaHtml = (portfolio && portfolio.criteria && portfolio.criteria.length)
+        ? portfolio.criteria.map(cr =>
+            `<div class="log-criterion ${cr.met ? 'met' : 'unmet'}">` +
+              `<span class="log-crit-icon">${cr.met ? '✓' : '✗'}</span>` +
+              `<span class="log-crit-text">${escapeHTML(cr.text)}</span>` +
+            `</div>`
+          ).join('')
+        : '';
+
+      const feedbackHtml = (portfolio && portfolio.feedback)
+        ? `<div class="log-detail-feedback">${escapeHTML(portfolio.feedback)}</div>`
+        : '';
+
+      const assistedHtml = (portfolio && portfolio.assisted)
+        ? `<div class="log-detail-note">Completed by reviewing the correct approach — learning by example counts.</div>`
+        : '';
+
+      const provisionalHtml = (portfolio && portfolio.score !== undefined && STATE.reflections && STATE.reflections[e.id || ''] === undefined && portfolio.provisional)
+        ? `<div class="log-detail-note">⚠ Provisionally scored — AI grader was offline. Resubmit for full evaluation.</div>`
+        : '';
+
+      const detailHtml = hasDetail
+        ? `<div class="log-detail" id="log-detail-${idx}" style="display:none;">
+            ${criteriaHtml ? `<div class="log-detail-criteria">${criteriaHtml}</div>` : ''}
+            ${feedbackHtml}
+            ${assistedHtml}
+            ${provisionalHtml}
+          </div>`
+        : '';
+
+      return `<div class="log-entry${hasDetail ? ' log-expandable' : ''}"${hasDetail ? ` onclick="toggleLogDetail(${idx})"` : ''}>
+        <div class="log-entry-summary">
+          <div class="log-meta">
+            <span class="log-date">${escapeHTML(e.date || '')}</span>
+            <span class="log-day">Day ${e.day || 1}</span>
+            ${hasDetail ? `<span class="log-expand-hint" id="log-hint-${idx}">▸</span>` : ''}
+          </div>
+          <div class="log-title">${escapeHTML(e.title || '')}</div>
+          <div class="log-right">
+            ${e.score === 'reviewed'
+              ? '<div class="log-score" style="color:var(--accent2);">reviewed</div>'
+              : e.score ? `<div class="log-score">${e.score}%</div>` : ''}
+            <div class="log-xp">+${e.xp || 0} XP</div>
+          </div>
         </div>
-        <div class="log-title">${escapeHTML(e.title || '')}</div>
-        <div class="log-right">
-          ${e.score === 'reviewed'
-            ? '<div class="log-score" style="color:var(--accent2);">reviewed</div>'
-            : e.score ? `<div class="log-score">${e.score}%</div>` : ''}
-          <div class="log-xp">+${e.xp || 0} XP</div>
-        </div>
-      </div>`).join('')}
+        ${detailHtml}
+      </div>`;
+    }).join('')}
   </div>`;
+}
+
+function toggleLogDetail(idx) {
+  const detail = document.getElementById('log-detail-' + idx);
+  const hint   = document.getElementById('log-hint-' + idx);
+  if (!detail) return;
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  if (hint) hint.textContent = isOpen ? '▸' : '▾';
 }
 
 // ── Generating screen ─────────────────────────────────────────────────────────

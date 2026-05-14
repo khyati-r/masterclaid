@@ -98,20 +98,43 @@ function trackApiUsage(apiKey, tokensUsed) {
   _saveRL(data);
 }
 
-// Returns display object for Groq key, or null for Gemini (no display needed)
+// Returns display object for both Groq and Gemini keys.
+// Groq: shows calls/300 with warn/block states.
+// Gemini: shows call count only (free tier limits vary by plan — no hard cap shown).
 function getRateLimitDisplay(apiKey) {
-  if (!(apiKey || '').trim().startsWith('gsk_')) return null;
+  const key = (apiKey || '').trim();
+  if (!key) return null;
   const data = _resetIfExpired(_loadRL());
-  const d = data.groq;
-  return {
-    calls:     d.calls,
-    maxCalls:  RL_GROQ.calls,
-    tokens:    d.tokens,
-    maxTokens: RL_GROQ.tokens,
-    pct:       Math.round((d.calls / RL_GROQ.calls) * 100),
-    warning:   d.calls >= RL_GROQ.warnCalls || d.tokens >= RL_GROQ.warnTokens,
-    blocked:   d.calls >= RL_GROQ.calls     || d.tokens >= RL_GROQ.tokens
-  };
+
+  if (key.startsWith('gsk_')) {
+    const d = data.groq;
+    return {
+      provider:  'Groq',
+      calls:     d.calls,
+      maxCalls:  RL_GROQ.calls,
+      tokens:    d.tokens,
+      maxTokens: RL_GROQ.tokens,
+      pct:       Math.round((d.calls / RL_GROQ.calls) * 100),
+      warning:   d.calls >= RL_GROQ.warnCalls || d.tokens >= RL_GROQ.warnTokens,
+      blocked:   d.calls >= RL_GROQ.calls     || d.tokens >= RL_GROQ.tokens
+    };
+  }
+
+  if (key.startsWith('AIza')) {
+    const d = data.gemini;
+    return {
+      provider:  'Gemini',
+      calls:     d.calls,
+      maxCalls:  null,   // Varies by plan — do not show a hard cap
+      tokens:    d.tokens,
+      maxTokens: null,
+      pct:       0,
+      warning:   false,
+      blocked:   false
+    };
+  }
+
+  return null;
 }
 
 // ── Gemini ────────────────────────────────────────────────────────────────────

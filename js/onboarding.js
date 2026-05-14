@@ -34,24 +34,18 @@ const OB_ROLES = [
   '__other__'
 ];
 
-// Combined background step — 7 framework options + 6 cert options
-const OB_BACKGROUND_FRAMEWORKS = [
+// Combined background — single list of 8 universal options covering both
+// standards/frameworks and qualifications. Selections go into OB.answers.frameworks.
+const OB_BACKGROUND = [
   'GDPR / UK GDPR / Data Protection',
   'ISO Standards (27001 / 9001 / 42001)',
-  'IFRS / UK GAAP / SOX / Financial Reporting',
   'HIPAA / NHS / Clinical Standards',
-  'PRINCE2 / PMP / Agile & Scrum',
-  'NIST / CIS / Security Frameworks',
-  'None of the above'
-];
-
-const OB_BACKGROUND_CERTS = [
-  'CISSP / CISM / CISA / Security+',
+  'IFRS / UK GAAP / SOX / Financial Reporting',
+  'CISSP / CISM / CISA / CompTIA Security+',
   'ACCA / ACA / CPA / CFA',
-  'PMP / PRINCE2 / Agile Certified',
-  'CIPD (HR & People)',
-  'AWS / Azure / GCP Certified',
-  'None yet'
+  'PMP / PRINCE2 / Agile / Scrum',
+  'AWS / Azure / GCP Cloud Certified',
+  'None / Not applicable'
 ];
 
 const OB_EXPERIENCE = [
@@ -218,20 +212,84 @@ function renderOnboardingStep(step) {
 function renderLanding() {
   return `<div class="landing">
   <div class="landing-inner">
+
+    <!-- Hero -->
     <div class="logo-mark">⬡</div>
     <h1 class="landing-title">Master.CLAID</h1>
-    <p class="landing-sub">30 days to Claude mastery — personalised to your role.<br>Build real AI skills your employer will notice.</p>
-    <div class="landing-features">
-      <div class="feat">10 Claude skill domains · 60 hands-on challenges · semantic grading</div>
-      <div class="feat">Foundations → Prompting → Products → MCP → Agentic → Mastery</div>
-      <div class="feat">Every scenario, example and rubric built for your actual job</div>
+    <p class="landing-sub">The only AI mastery programme built specifically for your role.<br>30 days. Real challenges. Real skills. Real deliverables.</p>
+
+    <!-- Differentiators -->
+    <div class="landing-diff">
+      <div class="landing-diff-card">
+        <div class="landing-diff-icon">🎯</div>
+        <div class="landing-diff-title">Built for your role, not everyone</div>
+        <div class="landing-diff-body">Every challenge, scenario, worked example, and rubric is AI-generated specifically for your professional role. A nurse gets clinical documentation challenges. A developer gets code review and API challenges. No generic filler.</div>
+      </div>
+      <div class="landing-diff-card">
+        <div class="landing-diff-icon">✋</div>
+        <div class="landing-diff-title">You do things. You don't watch things.</div>
+        <div class="landing-diff-body">No videos. No slides. No passive learning. Every single day you open Claude, complete a hands-on challenge that produces a real work output, and get AI-graded feedback against a professional rubric.</div>
+      </div>
+      <div class="landing-diff-card">
+        <div class="landing-diff-icon">📁</div>
+        <div class="landing-diff-title">A portfolio, not just a certificate</div>
+        <div class="landing-diff-body">60 challenges means 60 real AI-assisted deliverables from your actual job. Your Day 28–30 Capstone is built directly from a professional problem you describe at the start — something that costs you time right now.</div>
+      </div>
     </div>
-    <button class="btn-primary" onclick="obNext()">Build my learning profile →</button>
-    ${STATE.generated ? '<button class="btn-secondary" style="margin-top:12px;" onclick="STATE.screen=\'app\';render();">Continue where I left off</button>' : ''}
-    <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;">
+
+    <!-- How it works -->
+    <div class="landing-how">
+      <div class="landing-how-label">How it works</div>
+      <div class="landing-steps">
+        <div class="landing-step">
+          <div class="landing-step-num">1</div>
+          <div class="landing-step-body">
+            <div class="landing-step-title">Build your profile in 8 questions</div>
+            <div class="landing-step-desc">Tell us your role, background, goals, and a real challenge you face at work. This is locked after generation — it shapes everything, so be specific.</div>
+          </div>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-num">2</div>
+          <div class="landing-step-body">
+            <div class="landing-step-title">Receive a personalised 30-day curriculum</div>
+            <div class="landing-step-desc">AI generates 60 challenges across 10 domains — from Claude Foundations through Prompt Engineering, Claude Products, MCP integrations, Agentic Workflows, and your role-specific mastery track. All tailored to you.</div>
+          </div>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-num">3</div>
+          <div class="landing-step-body">
+            <div class="landing-step-title">Complete daily challenges in Claude</div>
+            <div class="landing-step-desc">Each challenge gives you a brief, a worked example, and a clear task. Open Claude.ai, do the work, paste your output back. AI grades you against the rubric with specific feedback — instantly.</div>
+          </div>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-num">4</div>
+          <div class="landing-step-body">
+            <div class="landing-step-title">Finish with genuine mastery — and proof</div>
+            <div class="landing-step-desc">End Day 30 with a portfolio of AI-assisted work, a completed Capstone solving your real professional problem, and the ability to use Claude as a daily professional accelerant. Not theory — actual skill.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="landing-features">
+      <div class="feat">10 domains · 60 challenges · AI-graded feedback on every submission</div>
+      <div class="feat">Foundations → Prompting → Products → MCP → Agentic → Your Role → Capstone</div>
+      <div class="feat">Capstone project built from your actual hardest professional challenge</div>
+      <div class="feat">Free to use · API key goes directly to providers · no data stored on servers</div>
+    </div>
+
+    <!-- CTA -->
+    <div class="landing-cta">
+      <button class="btn-primary" style="font-size:14px;padding:14px 32px;" onclick="obNext()">Build my learning profile →</button>
+      ${STATE.generated ? '<button class="btn-secondary" style="margin-left:12px;" onclick="STATE.screen=\'app\';render();">Continue where I left off</button>' : ''}
+    </div>
+    <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;">
       <button class="btn-ghost" onclick="triggerImport()">↑ Import save</button>
     </div>
     <input type="file" id="importFile" class="import-input" accept=".json" onchange="importSave(event)">
+
   </div>
 </div>`;
 }
@@ -261,29 +319,19 @@ function selectRole(r) {
   renderOnboarding();
 }
 
-// ── Background (frameworks + certs combined) ──────────────────────────────────
+// ── Background (standards + qualifications — single unified list) ─────────────
 
 function renderBackgroundStep() {
   return obShell('Your professional background', 'Step 2 of 8', `
-    <p class="ob-hint">Optional, but helpful — Claude uses this to reference the right standards, terminology and professional context in every challenge scenario and worked example.</p>
+    <p class="ob-hint">Optional but valuable — Claude uses this to reference the right standards, terminology, and professional context in every challenge. Select everything that applies to your work.</p>
 
-    <div class="ob-step-subsection">Standards &amp; frameworks you work with</div>
     <div class="ob-options ob-options-multi">
-      ${OB_BACKGROUND_FRAMEWORKS.map(f =>
-        `<button class="ob-opt ${OB.answers.frameworks.includes(f) ? 'selected' : ''}" onclick="toggleArr('frameworks', ${JSON.stringify(f).replace(/"/g,'&quot;')})">${escapeHTML(f)}</button>`
+      ${OB_BACKGROUND.map(item =>
+        `<button class="ob-opt ${OB.answers.frameworks.includes(item) ? 'selected' : ''}" onclick="toggleArr('frameworks', ${JSON.stringify(item).replace(/"/g,'&quot;')})">${escapeHTML(item)}</button>`
       ).join('')}
     </div>
-    <input type="text" class="ob-input" placeholder="Others — e.g. Basel III, NICE Guidelines, Ofsted, FCA Handbook, ICF" style="margin-top:10px;width:100%;margin-bottom:20px;"
+    <input type="text" class="ob-input" placeholder="Anything else relevant — e.g. CIPD L5, FCA Handbook, NICE Guidelines, OSCP, Basel III…" style="margin-top:12px;width:100%;"
       value="${escapeHTML(OB.answers.frameworksOther)}" oninput="OB.answers.frameworksOther=this.value">
-
-    <div class="ob-step-subsection">Qualifications &amp; certifications</div>
-    <div class="ob-options ob-options-multi">
-      ${OB_BACKGROUND_CERTS.map(c =>
-        `<button class="ob-opt ${OB.answers.certs.includes(c) ? 'selected' : ''}" onclick="toggleArr('certs', ${JSON.stringify(c).replace(/"/g,'&quot;')})">${escapeHTML(c)}</button>`
-      ).join('')}
-    </div>
-    <input type="text" class="ob-input" placeholder="Others — e.g. CIPD L5, BPS Chartered, OSCP, MSc, CFA Level 2" style="margin-top:10px;width:100%;"
-      value="${escapeHTML(OB.answers.certsOther)}" oninput="OB.answers.certsOther=this.value">
   `, true, true);
 }
 
@@ -306,7 +354,7 @@ function renderGoalsStep() {
   const roleKey = OB.answers.role === '__other__' ? OB.answers.roleOther : OB.answers.role;
   const goals = getGoalsForRole(roleKey);
   return obShell('What do you want to achieve with Claude?', 'Step 4 of 8', `
-    <p class="ob-hint">Select up to 3. These shape the "Why this matters" framing in every challenge and the direction of your Day 28–30 Capstone project.</p>
+    <p class="ob-hint">Select up to 5. These shape the "Why this matters" framing in every challenge and the direction of your Day 28–30 Capstone project. The more goals you pick, the broader the curriculum focus.</p>
     <div class="ob-options ob-options-multi" id="goalsOpts">
       ${goals.map(g =>
         `<button class="ob-opt ${OB.answers.goals.includes(g) ? 'selected' : ''}" onclick="toggleGoal(${JSON.stringify(g).replace(/"/g,'&quot;')})">${escapeHTML(g)}</button>`
@@ -320,7 +368,7 @@ function renderGoalsStep() {
 function toggleGoal(g) {
   if (OB.answers.goals.includes(g)) {
     OB.answers.goals = OB.answers.goals.filter(x => x !== g);
-  } else if (OB.answers.goals.length < 3) {
+  } else if (OB.answers.goals.length < 5) {
     OB.answers.goals.push(g);
   }
   const opts = document.getElementById('goalsOpts');
@@ -393,6 +441,10 @@ function renderChallengeStep() {
 
 function renderApiKeyStep() {
   return obShell('Connect your AI provider', 'Step 8 of 8', `
+    <div class="ob-lock-notice">
+      <strong>⬡ One-time profile generation</strong>
+      Your answers will be used to generate a personalised 30-day curriculum. Once generation starts, your profile is locked — this ensures the curriculum stays coherent from Day 1 to Day 30. Review your answers carefully before proceeding.
+    </div>
     <p class="ob-hint">Your curriculum generates directly via your API key — sent to the provider and never stored on our servers. Kept only in browser session memory; cleared automatically when you close the tab.</p>
     <div class="api-options" id="apiOptions">
       <button class="api-path-btn ${OB._apiPath === 1 || !OB._apiPath ? 'active' : ''}" onclick="setObApiPath(1)">Gemini API key <span class="badge-free">Free</span></button>
@@ -448,6 +500,7 @@ function obShell(title, stepLabel, bodyHtml, showBack, canContinue) {
   return `<div class="ob-shell">
   <div class="ob-inner">
     <div class="ob-step-label">${escapeHTML(stepLabel)}</div>
+    <div class="ob-profile-tip">⬡ The more specific your answers, the more curated your 30-day curriculum. Your profile is generated once and locked after this — take your time.</div>
     <h2 class="ob-title">${escapeHTML(title)}</h2>
     ${bodyHtml}
     <div class="ob-actions">

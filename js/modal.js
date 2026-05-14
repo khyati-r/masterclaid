@@ -271,8 +271,8 @@ function renderModalBody(c) {
         ? '<div class="callout" style="margin-bottom:16px;">Paste your Claude output and your own reflection below. Minimum ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' characters. Grade is based on AI evaluation against the challenge rubric.</div>'
         : '') +
       '<textarea class="submit-textarea" id="submissionText" placeholder="Paste your Claude output and your own reflection here. Include the prompts you used and Claude\'s responses."' +
-        ' oninput="MODAL.submission=this.value">' + escapeHTML(MODAL.submission) + '</textarea>' +
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">' + (MODAL.submission || '').length + ' chars</div>' +
+        ' oninput="MODAL.submission=this.value; var _cc=document.getElementById(\'subCharCount\'); if(_cc) _cc.textContent=this.value.length+\' / min ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' chars\';">' + escapeHTML(MODAL.submission) + '</textarea>' +
+      '<div id="subCharCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">' + (MODAL.submission || '').length + ' / min ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' chars</div>' +
       (MODAL.answerRevealed
         ? '<div class="reveal-answer-panel"><div class="reveal-answer-label">✓ Correct Approach — Worked Example</div><div class="reveal-answer-body">' +
             escapeHTML(c.miniExample || 'No worked example available.').replace(/\n/g, '<br>') +

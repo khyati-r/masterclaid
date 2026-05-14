@@ -47,44 +47,70 @@ const GRADING_SYSTEM_PROMPT = 'You are an educational assessor. Return valid JSO
 
 // ── Local fallback grader (used when API is unavailable) ──────────────────────
 // Returns a provisional score so users always get feedback.
+// Scores each rubric criterion individually using keyword matching.
+// Can reach 100% — no artificial cap. Clearly labelled as provisional.
 
 function localFallbackGrade(submission, challenge) {
   const words = submission.trim().split(/\s+/).filter(Boolean).length;
-
-  // Length adequacy: 50 words = 40 pts, 150+ words = full 50 pts
-  const lengthScore = Math.min(50, Math.round((words / 150) * 50));
-
-  // Keyword coverage from challenge title, skill, and rubric
-  const sourceText = [
-    challenge.title || '',
-    challenge.skill || '',
-    (challenge.rubric || []).join(' ')
-  ].join(' ').toLowerCase();
-
-  const keywords = [...new Set(
-    sourceText.split(/\W+/).filter(w => w.length > 4)
-  )];
-
   const subLower = submission.toLowerCase();
-  const covered = keywords.filter(k => subLower.includes(k)).length;
-  const termScore = keywords.length > 0
-    ? Math.min(50, Math.round((covered / Math.min(keywords.length, 12)) * 50))
-    : 30;
 
-  const score = Math.min(88, lengthScore + termScore);
-
+  // Build the rubric list (always 4 items)
   const rubric = (challenge.rubric || []).slice(0, 4);
   while (rubric.length < 4) rubric.push('Submission demonstrates engagement with the challenge task');
 
-  // Graduated thresholds so partial credit is realistic
-  const thresholds = [30, 45, 58, 70];
-  const criteria = rubric.map((text, i) => ({ text, met: score >= thresholds[i] }));
+  // Score each criterion individually by keyword match against its own text
+  const criteria = rubric.map(text => {
+    const critWords = text.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+    if (!critWords.length) return { text, met: words >= 80 };
+    const hits = critWords.filter(kw => subLower.includes(kw)).length;
+    const coverage = hits / Math.min(critWords.length, 8);
+    // Met: ≥35% keyword overlap within this criterion's own wording,
+    // OR submission is comprehensive enough (250+ words) to imply full engagement.
+    const met = coverage >= 0.35 || words >= 250;
+    return { text, met };
+  });
+
+  // Extra signal: coverage of challenge title and skill keywords
+  const titleKws = [challenge.title || '', challenge.skill || '']
+    .join(' ').toLowerCase().split(/\W+/).filter(w => w.length > 3);
+  const titleHits = titleKws.length
+    ? titleKws.filter(k => subLower.includes(k)).length / Math.min(titleKws.length, 8)
+    : 0;
+
+  const metCount = criteria.filter(c => c.met).length;
+
+  // Base score proportional to criteria met (0–100), with small bonuses
+  const baseScore    = Math.round((metCount / 4) * 100);
+  const lengthBonus  = words >= 200 ? 5 : words >= 100 ? 2 : 0;
+  const titleBonus   = titleHits >= 0.5 ? 3 : 0;
+  const score        = Math.min(100, baseScore + lengthBonus + titleBonus);
+
+  // Build honest, specific feedback
+  const unmetTexts = criteria.filter(c => !c.met).map(c => c.text.substring(0, 50));
+  let feedbackMsg = `Local evaluation (AI grader temporarily unavailable). ` +
+    `Your ${words}-word submission was checked against ${criteria.length} rubric criteria using keyword and length analysis. `;
+
+  if (metCount === 4) {
+    feedbackMsg += 'All 4 criteria appeared to be addressed — well done! ' +
+      'Resubmit when online to get full AI-graded feedback with personalised suggestions.';
+  } else if (metCount > 0) {
+    feedbackMsg += `${metCount}/4 criteria appear to be addressed.` +
+      (unmetTexts.length
+        ? ' Consider expanding on: ' + unmetTexts.map(t => '"' + t + '…"').join('; ') + '.'
+        : '') +
+      ' Resubmit for full AI feedback when available.';
+  } else {
+    feedbackMsg += 'Try to address each rubric criterion more explicitly — ' +
+      'name the concept, explain how you applied it, and paste your Claude output.';
+  }
 
   return {
     score,
     criteria,
-    feedback: `Provisional score — AI grader was temporarily unavailable. Your ${words}-word submission was scored locally based on length and concept coverage. Resubmit when online for a full evaluation.`,
-    suggestion: 'Resubmit for AI grading to receive detailed, criterion-by-criterion feedback.',
+    feedback: feedbackMsg,
+    suggestion: score >= APP_CONFIG.PASS_THRESHOLD * 100
+      ? 'Resubmit when online for personalised criterion-by-criterion AI feedback.'
+      : 'Expand your answer to address each criterion explicitly, then resubmit.',
     provisional: true
   };
 }
@@ -221,6 +247,7 @@ async function submitChallenge() {
       // Completion-based: 100% = all required challenges in domain passed
       STATE.skillScores = recalculateSkillScores();
       STATE.log.push({
+        id: c.id,
         date: new Date().toLocaleDateString(),
         title: c.title || c.skill,
         xp: c.xp,
@@ -280,6 +307,7 @@ function markAssistedComplete() {
     // Assisted completions do NOT count for skill %, but recalc keeps other domains correct
     STATE.skillScores = recalculateSkillScores();
     STATE.log.push({
+      id: c.id,
       date: new Date().toLocaleDateString(),
       title: c.title || c.skill,
       xp: c.xp,
