@@ -147,9 +147,9 @@ async function gradeWithGemini(submission, challenge) {
           // Ensure criteria is a properly-shaped array — coerce if needed
           if (!Array.isArray(raw.criteria) || !raw.criteria.every(c => c && typeof c.text === 'string')) {
             // Build synthetic criteria from rubric so the result is still usable
-            const rubric = (challenge.rubric || []).slice(0, 4);
+            const rubric = (challenge.rubric || []).slice(0, 6);
             while (rubric.length < 4) rubric.push('Submission demonstrates engagement with the challenge task');
-            const metCount = Math.round((raw.score / 100) * 4);
+            const metCount = Math.round((raw.score / 100) * rubric.length);
             raw.criteria = rubric.map((text, i) => ({ text, met: i < metCount }));
           }
 
