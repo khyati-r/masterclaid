@@ -218,6 +218,14 @@ function importSave(event) {
       if (STATE.portfolio.length    > 300) STATE.portfolio    = STATE.portfolio.slice(0, 300);
       if (STATE.log.length          > 500) STATE.log          = STATE.log.slice(0, 500);
       if (STATE.skillHistory.length > 100) STATE.skillHistory = STATE.skillHistory.slice(0, 100);
+      // [A08] Clamp numeric fields to valid ranges to prevent crafted saves from
+      // causing rendering failures, infinite loops, or unexpected UI states.
+      STATE.currentDay        = Math.max(1, Math.min(35,   parseInt(STATE.currentDay, 10)        || 1));
+      STATE.currentDomain     = Math.max(0, Math.min(9,    parseInt(STATE.currentDomain, 10)     || 0));
+      STATE.xp                = Math.max(0, Math.min(999999, parseInt(STATE.xp, 10)              || 0));
+      STATE.streak            = Math.max(0, Math.min(3650, parseInt(STATE.streak, 10)            || 0));
+      STATE.daysActive        = Math.max(0, Math.min(3650, parseInt(STATE.daysActive, 10)        || 0));
+      STATE.lastGeneratedDay  = Math.max(0, Math.min(35,   parseInt(STATE.lastGeneratedDay, 10)  || 0));
       STATE.apiKey = null;
       STATE.challengesFetching = false;
       STATE.gradingInProgress = false;
