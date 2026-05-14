@@ -79,6 +79,26 @@ function renderApp() {
 ${renderModalOverlay()}`;
 }
 
+// ── Rate-limit badge live update ──────────────────────────────────────────────
+// Called by trackApiUsage() after every API call — updates just the badge chip
+// in the header without re-rendering the whole app shell.
+
+function refreshRLBadge() {
+  const apiKey = getApiKey();
+  const rl = apiKey ? getRateLimitDisplay(apiKey) : null;
+  const headerActions = document.querySelector('.header-actions');
+  if (!headerActions) return;
+  const old = headerActions.querySelector('.rl-badge');
+  if (old) old.remove();
+  if (rl && rl.calls > 0) {
+    const div = document.createElement('div');
+    div.className = 'rl-badge' + (rl.blocked ? ' rl-danger' : rl.warning ? ' rl-warn' : '');
+    div.title = rl.provider + ' today: ' + rl.calls + (rl.maxCalls ? '/' + rl.maxCalls : '') + ' calls · ' + Math.round((rl.tokens || 0) / 1000) + 'K tokens';
+    div.textContent = rl.provider + ': ' + rl.calls + (rl.maxCalls ? '/' + rl.maxCalls : '') + ' calls';
+    headerActions.insertBefore(div, headerActions.firstChild);
+  }
+}
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
 function switchTab(tab) {
@@ -316,18 +336,17 @@ function renderLog() {
   <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Click any entry to expand detailed feedback and criteria.</p>
   <div class="log-list">
     ${log.map((e, idx) => {
-      // Look up the matching portfolio entry for richer detail
+      // Criteria and feedback: prefer inline log data (new entries), fall back to portfolio lookup
       const portfolio = (STATE.portfolio || []).find(p =>
         (e.id && p.id === e.id) ||
         (p.title === e.title && p.day === e.day)
       );
-      const hasDetail = !!(portfolio && (
-        (portfolio.criteria && portfolio.criteria.length) ||
-        portfolio.feedback
-      ));
+      const criteria  = (e.criteria  && e.criteria.length)  ? e.criteria  : (portfolio && portfolio.criteria  || []);
+      const feedback  = e.feedback  || (portfolio && portfolio.feedback)  || '';
+      const hasDetail = (criteria.length > 0 || !!feedback) && !e.assisted;
 
-      const criteriaHtml = (portfolio && portfolio.criteria && portfolio.criteria.length)
-        ? portfolio.criteria.map(cr =>
+      const criteriaHtml = criteria.length
+        ? criteria.map(cr =>
             `<div class="log-criterion ${cr.met ? 'met' : 'unmet'}">` +
               `<span class="log-crit-icon">${cr.met ? '✓' : '✗'}</span>` +
               `<span class="log-crit-text">${escapeHTML(cr.text)}</span>` +
@@ -335,8 +354,8 @@ function renderLog() {
           ).join('')
         : '';
 
-      const feedbackHtml = (portfolio && portfolio.feedback)
-        ? `<div class="log-detail-feedback">${escapeHTML(portfolio.feedback)}</div>`
+      const feedbackHtml = feedback
+        ? `<div class="log-detail-feedback">${escapeHTML(feedback)}</div>`
         : '';
 
       const detailHtml = hasDetail

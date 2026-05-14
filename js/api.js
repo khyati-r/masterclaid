@@ -96,6 +96,10 @@ function trackApiUsage(apiKey, tokensUsed) {
   d.calls  += 1;
   d.tokens += Math.max(0, tokensUsed || 0);
   _saveRL(data);
+  // Update the header badge immediately without a full re-render
+  if (typeof refreshRLBadge === 'function') {
+    try { refreshRLBadge(); } catch (_e) {}
+  }
 }
 
 // Returns display object for both Groq and Gemini keys.

@@ -178,34 +178,31 @@ function renderModalBody(c) {
     return;
   }
 
-  // ── Step 0: BRIEF (Learn + Example combined) ───────────────────────────────
+  // ── Step 0: BRIEF ─────────────────────────────────────────────────────────
   if (s === 0) {
-    const concept    = c.concept    || 'This challenge develops your ability to: ' + (c.skill || 'work effectively with Claude');
+    const concept    = c.concept    || 'This challenge develops your ability to ' + (c.skill || 'work effectively with Claude') + '.';
     const whyMatters = c.whyMatters || 'Mastering this skill makes Claude a genuine professional accelerant for your work.';
-    const outcome    = c.outcome    || 'After this challenge, you will be able to apply this skill in real professional situations.';
 
     body.innerHTML =
       '<div class="learn-section">' +
-        '<div class="learn-tag">What you are learning today</div>' +
-        '<div class="learn-concept">' + escapeHTML(c.title || c.skill || 'Challenge') + '</div>' +
 
         (c.beginnerScaffold
           ? '<div class="beginner-scaffold">' +
-              '<div class="beginner-scaffold-label">In plain English — what you will actually do</div>' +
+              '<div class="beginner-scaffold-label">What you\'ll actually do</div>' +
               escapeHTML(c.beginnerScaffold) +
-              '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.06em;">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab. Submit text — do not paste screenshots.</div>' +
+              '<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.06em;">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab. Paste Claude\'s text output when you submit — no screenshots.</div>' +
             '</div>'
-          : '<div class="callout" style="margin-bottom:16px;">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab. Copy and paste Claude\'s responses as text when you submit.</div>') +
+          : '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.06em;margin-bottom:14px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);">▸ Open <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">claude.ai</a> in a new tab · paste Claude\'s text output when you submit · no screenshots</div>') +
 
-        '<div class="learn-block"><div class="learn-block-label">What this skill is</div><div class="learn-block-body">' + escapeHTML(concept) + '</div></div>' +
-        '<div class="learn-block"><div class="learn-block-label">Why it matters in your work</div><div class="learn-block-body">' + escapeHTML(whyMatters) + '</div></div>' +
-        '<div class="learn-block"><div class="learn-block-label">What you will be able to do after this</div><div class="learn-block-body">' + escapeHTML(outcome) + '</div></div>' +
-        '<div class="callout" style="margin-top:14px;border-left-color:var(--text3);">⏱ Time needed: ' + escapeHTML(c.timeEst || '20–30 minutes') + '</div>' +
+        '<div class="learn-block" style="margin-bottom:10px;"><div class="learn-block-label">What this skill is</div><div class="learn-block-body" style="font-size:14px;line-height:1.7;">' + escapeHTML(concept) + '</div></div>' +
+        '<div class="learn-block" style="margin-bottom:10px;"><div class="learn-block-label">Why it matters</div><div class="learn-block-body" style="font-size:14px;line-height:1.7;">' + escapeHTML(whyMatters) + '</div></div>' +
 
-        // Inline example
+        '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.04em;margin-top:4px;">⏱ ' + escapeHTML(c.timeEst || '20–30 min') + ' · Step through the task on the next screen</div>' +
+
+        // Inline example — only shown if present
         (c.miniExample
-          ? '<div class="learn-tag" style="margin-top:24px;">Worked example</div>' +
-            '<div class="example-card">' + escapeHTML(c.miniExample).replace(/\n/g, '<br>') + '</div>'
+          ? '<div class="learn-tag" style="margin-top:20px;">Worked example</div>' +
+            '<div class="example-card" style="font-size:13px;">' + escapeHTML(c.miniExample).replace(/\n/g, '<br>') + '</div>'
           : '') +
 
       '</div>';
@@ -213,12 +210,24 @@ function renderModalBody(c) {
 
   // ── Step 1: TASK ────────────────────────────────────────────────────────────
   else if (s === 1) {
+    const rubric = (c.rubric || []).slice(0, 6);
+    const rubricHtml = rubric.length
+      ? '<div class="learn-tag" style="margin-top:20px;">Grading checklist — your submission must address each of these</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;">' +
+        rubric.map((r, i) =>
+          '<div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);line-height:1.55;">' +
+            '<span style="font-family:var(--mono);font-size:10px;color:var(--accent3);flex-shrink:0;margin-top:2px;letter-spacing:0.04em;">' + (i + 1) + '.</span>' +
+            '<span>' + escapeHTML(r) + '</span>' +
+          '</div>'
+        ).join('') +
+        '</div>'
+      : '';
+
     body.innerHTML =
       '<div class="learn-tag">Your task</div>' +
       renderTaskFrame(c.taskFrame || '') +
-      '<div class="callout" style="margin-top:16px;">' +
-        '<strong>Remember:</strong> Copy and paste Claude\'s full output as text when you submit — do not upload screenshots.' +
-      '</div>';
+      rubricHtml +
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.04em;margin-top:14px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);">Paste Claude\'s full text output when you submit on the next screen — no screenshots</div>';
 
     // Render any already-used hints
     MODAL.hintsUsed.forEach(n => {
@@ -268,9 +277,9 @@ function renderModalBody(c) {
     body.innerHTML =
       (MODAL.scored && MODAL.scoreData ? renderScoreResult(MODAL.scoreData, c) : '') +
       (!MODAL.scored
-        ? '<div class="callout" style="margin-bottom:16px;">Paste your Claude output and your own reflection below. Minimum ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' characters. Grade is based on AI evaluation against the challenge rubric.</div>'
+        ? '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.04em;margin-bottom:10px;">Paste your Claude conversation output below — include the prompts you wrote and Claude\'s full responses. Min ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' chars.</div>'
         : '') +
-      '<textarea class="submit-textarea" id="submissionText" placeholder="Paste your Claude output and your own reflection here. Include the prompts you used and Claude\'s responses."' +
+      '<textarea class="submit-textarea" id="submissionText" placeholder="Paste your Claude output here — include the prompts you wrote and Claude\'s full responses. The grading checklist on the previous step shows exactly what to cover."' +
         ' oninput="MODAL.submission=this.value; var _cc=document.getElementById(\'subCharCount\'); if(_cc) _cc.textContent=this.value.length+\' / min ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' chars\';">' + escapeHTML(MODAL.submission) + '</textarea>' +
       '<div id="subCharCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">' + (MODAL.submission || '').length + ' / min ' + APP_CONFIG.MIN_SUBMISSION_CHARS + ' chars</div>' +
       (MODAL.answerRevealed

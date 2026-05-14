@@ -169,25 +169,17 @@ async function gradeWithGemini(submission, challenge) {
       throw new Error('Unexpected grading response shape');
     } catch (err) {
       console.warn('[grading] Attempt', attempt, 'failed:', err.message);
-      // Rate limit — surface immediately as a hard error (not fallback)
+      // Only our own daily-budget tracker should block with a hard error
       if (err.message && err.message.startsWith('RATE_LIMIT:')) {
         return { error: 'rate_limit', message: err.message.replace('RATE_LIMIT: ', '') };
       }
-      // HTTP errors (4xx/5xx) from the API — surface to user rather than silently falling back
-      if (err.message && /^HTTP_[45]\d\d/.test(err.message)) {
-        console.error('[grading] API error:', err.message);
-        if (attempt === 1) {
-          await sleep(1500);
-          continue;
-        }
-        return { error: 'api_error', message: 'Grading failed: ' + err.message.replace(/^HTTP_\d+:\s*/, '').substring(0, 120) };
-      }
+      // ALL other errors (HTTP 429 quota, 500, network, JSON parse, etc.) →
+      // retry once then fall back silently to local grader — never surface to user
       if (attempt === 1) {
-        await sleep(1500); // short pause before single retry
+        await sleep(1500);
         continue;
       }
-      // Second attempt failed on a network/shape error — fall back to local grader
-      console.error('[grading] API error:', err.message);
+      console.error('[grading] Falling back to local grading after error:', err.message);
       return localFallbackGrade(submission, challenge);
     }
   }
@@ -253,21 +245,17 @@ async function submitChallenge() {
     MODAL.gradingInProgress = false;
   }
 
-  // Hard-fail for missing key, rate limit, or API error — do not decrement attempts for rate limits
+  // Hard-fail only for missing key or our own rate-limit tracker — everything else falls back to local
   if (!gradingResult || gradingResult.error) {
+    STATE.attempts[c.id] = Math.max(0, attempts - 1);
     if (!gradingResult || gradingResult.error === 'rate_limit') {
-      // Rate limit: don't waste the attempt
-      STATE.attempts[c.id] = Math.max(0, attempts - 1);
       MODAL.gradingError = (gradingResult && gradingResult.message)
         ? '🚫 ' + gradingResult.message
         : 'Daily API limit reached. Come back tomorrow — your progress is saved.';
-    } else if (gradingResult.error === 'api_error') {
-      // API returned an error response — surface it, keep the attempt
-      STATE.attempts[c.id] = Math.max(0, attempts - 1);
-      MODAL.gradingError = gradingResult.message || 'Grading failed. Please try again.';
     } else {
-      STATE.attempts[c.id] = Math.max(0, attempts - 1);
-      MODAL.gradingError = (gradingResult && gradingResult.message) || 'Grading unavailable. Please try again.';
+      // no_key or any other hard stop
+      MODAL.gradingError = (gradingResult && gradingResult.message)
+        || 'No API key configured. Add your key in Settings to enable grading.';
     }
     renderModal();
     return;
@@ -297,7 +285,9 @@ async function submitChallenge() {
         score: score,
         day: STATE.currentDay,
         domain: c.domain,
-        assisted: false
+        assisted: false,
+        criteria: gradingResult.criteria || [],
+        feedback: gradingResult.feedback || ''
       });
       addToPortfolio(c, submission, score, gradingResult.criteria || [], gradingResult.feedback || '', attempts, false);
       touchStreak();
